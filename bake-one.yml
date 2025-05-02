@@ -1,0 +1,103 @@
+name: "Build One Image (Local Action Call)" # Renamed for clarity
+
+on:
+  workflow_dispatch:
+    inputs:
+      armbian_target:
+        type: choice
+        description: 'Build'
+        required: false
+        options:
+        - kernel
+        - build
+        default: build
+      armbian_kernel_branch:
+        type: choice
+        description: 'Kernel branch'
+        options:
+        - legacy
+        - current
+        - edge
+        default: 'current'
+      armbian_release:
+        type: choice
+        description: 'Userspace'
+        options:
+        - jammy
+        - mantic
+        - bookworm
+        - trixie
+        - sid
+        default: 'jammy'
+      armbian_ui:
+        type: choice
+        description: 'User interface (not all works)'
+        options:
+        - minimal
+        - server
+        - xfce
+        - gnome
+        - cinnamon
+        - i3-wm
+        - kde-plasma
+        default: 'minimal'
+      armbian_version:
+        description: 'Version'
+        required: false
+        default: ''
+      armbian_board:
+        type: choice
+        description: 'Board'
+        options:
+          - orangepi5-plus
+        default: 'orangepi5-plus'
+
+env:
+  BUILD_REPO_OWNER: diverger
+  BUILD_REPO_NAME: armbian-build
+  LOCAL_BUILD_ACTION_PATH: ./local-build-action
+
+jobs:
+  build:
+    if: ${{ github.repository_owner == "diverger" }}
+    runs-on: ubuntu-latest
+    name: "Bake Armbian (${{ inputs.armbian_board }} / ${{ inputs.armbian_release }} / ${{ inputs.armbian_ui }})"
+
+    steps:
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Checkout Armbian build framework locally
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BUILD_REPO_OWNER }}/${{ env.BUILD_REPO_NAME }}
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          path: ${{ env.LOCAL_BUILD_ACTION_PATH }}
+
+      - name: Run Armbian Build Action Locally
+        uses: ${{ env.LOCAL_BUILD_ACTION_PATH }}
+        with:
+          armbian_target: ${{ inputs.armbian_target }}
+          armbian_kernel_branch: ${{ inputs.armbian_kernel_branch }}
+          armbian_release: ${{ inputs.armbian_release }}
+          armbian_ui: ${{ inputs.armbian_ui }}
+          armbian_version: ${{ inputs.armbian_version }}
+          armbian_board: ${{ inputs.armbian_board }}
+          armbian_token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          armbian_pgp_key: ${{ secrets.GPG_KEY1 }}
+          armbian_pgp_password: ${{ secrets.GPG_PASSPHRASE1 }}
+
+      - name: Upload Build Artifacts (Fallback)
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: armbian-image-fallback-${{ inputs.armbian_board }}-${{ inputs.armbian_release }}-${{ inputs.armbian_ui }}
+          path: ${{ github.workspace }}/${{ env.LOCAL_BUILD_ACTION_PATH }}/build/output/images/
+          if-no-files-found: ignore
