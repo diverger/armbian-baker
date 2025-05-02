@@ -55,7 +55,7 @@ on:
 env:
   BUILD_REPO_OWNER: diverger
   BUILD_REPO_NAME: armbian-build
-  LOCAL_BUILD_ACTION_PATH: ./local-build-action
+  LOCAL_BUILD_ACTION_PATH: ./
 
 jobs:
   build:
@@ -91,8 +91,8 @@ jobs:
           armbian_version: ${{ inputs.armbian_version }}
           armbian_board: ${{ inputs.armbian_board }}
           armbian_token: ${{ secrets.REPO_ACCESS_TOKEN }}
-          armbian_pgp_key: ${{ secrets.GPG_KEY1 }}
-          armbian_pgp_password: ${{ secrets.GPG_PASSPHRASE1 }}
+          armbian_pgp_key: ${{ secrets.GPG_KEY }}
+          armbian_pgp_password: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Upload Build Artifacts (Fallback)
         uses: actions/upload-artifact@v4
