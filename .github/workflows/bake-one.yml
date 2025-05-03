@@ -96,10 +96,4 @@ jobs:
           armbian_pgp_key: ${{ secrets.GPG_KEY }}
           armbian_pgp_password: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Upload build artifacts (fallback)
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: armbian-image-fallback-${{ inputs.armbian_board }}-${{ inputs.armbian_release }}-${{ inputs.armbian_ui }}
-          path: ${{ github.workspace }}/${{ env.LOCAL_BUILD_ACTION_PATH }}/build/output/images/
-          if-no-files-found: ignore
+
