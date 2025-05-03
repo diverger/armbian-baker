@@ -1,4 +1,4 @@
-name: "Build One Image (Local Action Call)" # Renamed for clarity
+name: "Build One Image (Local Action Call)"
 
 on:
   workflow_dispatch:
@@ -80,7 +80,7 @@ jobs:
           repository: ${{ env.BUILD_REPO_OWNER }}/${{ env.BUILD_REPO_NAME }}
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           path: ${{ env.LOCAL_BUILD_ACTION_PATH }}
-          sparse-checkout: active.yml
+          sparse-checkout: action.yml
           sparse-checkout-cone-mode: false
 
       - name: Build local
