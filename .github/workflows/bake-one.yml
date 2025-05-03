@@ -83,7 +83,7 @@ jobs:
           sparse-checkout: active.yml
           sparse-checkout-cone-mode: false
 
-      - name: Run Armbian Build Action Locally
+      - name: Build local
         uses: ./
         with:
           armbian_target: ${{ inputs.armbian_target }}
