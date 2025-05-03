@@ -11,7 +11,7 @@ updates:
     directory: "/"
     # Check for updates weekly
     schedule:
-      interval: "weekly"
+      interval: "daily"
     # Add assignees (optional)
     assignees:
        - "diverger"
