@@ -1,4 +1,4 @@
-name: "Build One Image (Local Action Call)"
+name: "Build One Image"
 run-name: "Build One Image (${{ inputs.armbian_board }} / ${{ inputs.armbian_release }} / ${{ inputs.armbian_ui }})"
 on:
   workflow_dispatch:
