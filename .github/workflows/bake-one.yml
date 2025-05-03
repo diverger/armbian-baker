@@ -1,5 +1,5 @@
 name: "Build One Image (Local Action Call)"
-
+run-name: "Build One Image (${{ inputs.armbian_board }} / ${{ inputs.armbian_release }} / ${{ inputs.armbian_ui }})"
 on:
   workflow_dispatch:
     inputs:
@@ -11,6 +11,7 @@ on:
         - kernel
         - build
         default: build
+
       armbian_kernel_branch:
         type: choice
         description: 'Kernel branch'
@@ -19,6 +20,7 @@ on:
         - current
         - edge
         default: 'current'
+
       armbian_release:
         type: choice
         description: 'Userspace'
@@ -29,6 +31,7 @@ on:
         - trixie
         - sid
         default: 'jammy'
+
       armbian_ui:
         type: choice
         description: 'User interface (not all works)'
@@ -41,10 +44,12 @@ on:
         - i3-wm
         - kde-plasma
         default: 'minimal'
+
       armbian_version:
         description: 'Version'
         required: false
         default: ''
+
       armbian_board:
         type: choice
         description: 'Board'
