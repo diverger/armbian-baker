@@ -61,7 +61,9 @@ on:
 env:
   BUILD_REPO_OWNER: diverger
   BUILD_REPO_NAME: armbian-build
+  BUILD_REPO_BRANCH: joshua
   LOCAL_BUILD_ACTION_PATH: ./
+
 
 jobs:
   build:
@@ -86,6 +88,7 @@ jobs:
           repository: ${{ env.BUILD_REPO_OWNER }}/${{ env.BUILD_REPO_NAME }}
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           path: ${{ env.LOCAL_BUILD_ACTION_PATH }}
+          branch: ${{ env.BUILD_REPO_BRANCH }}
           sparse-checkout: action.yml
           sparse-checkout-cone-mode: false
 
