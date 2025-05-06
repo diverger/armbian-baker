@@ -55,6 +55,7 @@ on:
         description: 'Board'
         options:
           - orangepi5-plus
+          - handy-hpd5kx
         default: 'orangepi5-plus'
 
 env:
