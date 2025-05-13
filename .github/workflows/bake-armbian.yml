@@ -102,6 +102,7 @@ jobs:
           ref: ${{ env.BUILD_REPO_BRANCH }}
           sparse-checkout: action.yml
           sparse-checkout-cone-mode: false
+          clean: false
 
       - name: Show folders in workspace
         run: ls -l
