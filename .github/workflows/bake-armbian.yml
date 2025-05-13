@@ -99,6 +99,9 @@ jobs:
           sparse-checkout: action.yml
           sparse-checkout-cone-mode: false
 
+      - name: Show folders in workspace
+        run: ls -l
+
     #   - name: Setup SSH key
     #     uses: webfactory/ssh-agent@v0.9.1
     #     with:
