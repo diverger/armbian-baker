@@ -107,12 +107,12 @@ jobs:
     #   - name: Show folders in workspace
     #     run: ls -l
 
-    #   - name: Setup SSH key
-    #     uses: webfactory/ssh-agent@v0.9.1
-    #     with:
-    #       ssh-private-key: |
-    #         ${{ secrets.GIT_SSH_PRIVATE_KEY_UBOOT }}
-    #         ${{ secrets.GIT_SSH_PRIVATE_KEY_KERNEL }}
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: |
+            ${{ secrets.GIT_SSH_PRIVATE_KEY_UBOOT }}
+            ${{ secrets.GIT_SSH_PRIVATE_KEY_KERNEL }}
 
       - name: Build local
         uses: ./
