@@ -82,6 +82,13 @@ jobs:
           large-packages: true
           swap-storage: true
 
+      - name: Checkout board definitions
+        uses: actions/checkout@v4
+        with:
+          repository: diverger/armbian-board
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          clean: false
+
       - name: Checkout Armbian build framework locally
         uses: actions/checkout@v4
         with:
@@ -91,13 +98,6 @@ jobs:
           ref: ${{ env.BUILD_REPO_BRANCH }}
           sparse-checkout: action.yml
           sparse-checkout-cone-mode: false
-
-      - name: Checkout board definitions
-        uses: actions/checkout@v4
-        with:
-          repository: diverger/armbian-board
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
-          clean: false
 
     #   - name: Setup SSH key
     #     uses: webfactory/ssh-agent@v0.9.1
