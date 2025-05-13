@@ -87,7 +87,11 @@ jobs:
         with:
           repository: diverger/armbian-board
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          ref: master
           clean: false
+
+      - name: Show folders in workspace
+        run: ls -l
 
       - name: Checkout Armbian build framework locally
         uses: actions/checkout@v4
