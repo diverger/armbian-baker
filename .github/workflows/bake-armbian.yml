@@ -1,8 +1,6 @@
-# Build with customized framework
+# Build with original
 name: "Build One Image"
 run-name: "Build One Image (${{ inputs.armbian_board }} / ${{ inputs.armbian_release }} / ${{ inputs.armbian_ui }})"
-
-
 on:
   workflow_dispatch:
     inputs:
@@ -64,9 +62,8 @@ on:
 env:
   BUILD_REPO_OWNER: diverger
   BUILD_REPO_NAME: armbian-build
-  BUILD_REPO_BRANCH: joshua
+  BUILD_REPO_BRANCH: armbian
   LOCAL_BUILD_ACTION_PATH: ./
-
 
 jobs:
   build:
@@ -95,12 +92,19 @@ jobs:
           sparse-checkout: action.yml
           sparse-checkout-cone-mode: false
 
-      - name: Setup SSH key
-        uses: webfactory/ssh-agent@v0.9.1
+      - name: Checkout board definitions
+        uses: actions/checkout@v4
         with:
-          ssh-private-key: |
-            ${{ secrets.GIT_SSH_PRIVATE_KEY_UBOOT }}
-            ${{ secrets.GIT_SSH_PRIVATE_KEY_KERNEL }}
+          repository: diverger/armbian-board
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          clean: false
+
+    #   - name: Setup SSH key
+    #     uses: webfactory/ssh-agent@v0.9.1
+    #     with:
+    #       ssh-private-key: |
+    #         ${{ secrets.GIT_SSH_PRIVATE_KEY_UBOOT }}
+    #         ${{ secrets.GIT_SSH_PRIVATE_KEY_KERNEL }}
 
       - name: Build local
         uses: ./
