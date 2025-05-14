@@ -1,8 +1,6 @@
-# Build with customized framework
-name: "Build One Image"
+# Build with original
+name: "Build One with original framework"
 run-name: "Build One Image (${{ inputs.armbian_board }} / ${{ inputs.armbian_release }} / ${{ inputs.armbian_ui }})"
-
-
 on:
   workflow_dispatch:
     inputs:
@@ -61,12 +59,17 @@ on:
           - handy-hpd5kx
         default: 'orangepi5-plus'
 
+      release_tag:
+        type: string
+        description: 'Rlease tag'
+        required: false
+        default: ''
+
 env:
   BUILD_REPO_OWNER: diverger
   BUILD_REPO_NAME: armbian-build
-  BUILD_REPO_BRANCH: joshua
+  BUILD_REPO_BRANCH: armbian
   LOCAL_BUILD_ACTION_PATH: ./
-
 
 jobs:
   build:
@@ -85,6 +88,17 @@ jobs:
           large-packages: true
           swap-storage: true
 
+      # - name: Checkout board definitions
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: diverger/armbian-board
+      #     token: ${{ secrets.REPO_ACCESS_TOKEN }}
+      #     ref: master
+      #     clean: false
+
+      # - name: Show folders in workspace
+      #   run: ls -l
+
       - name: Checkout Armbian build framework locally
         uses: actions/checkout@v4
         with:
@@ -94,13 +108,17 @@ jobs:
           ref: ${{ env.BUILD_REPO_BRANCH }}
           sparse-checkout: action.yml
           sparse-checkout-cone-mode: false
+          clean: false
 
-      - name: Setup SSH key
-        uses: webfactory/ssh-agent@v0.9.1
-        with:
-          ssh-private-key: |
-            ${{ secrets.GIT_SSH_PRIVATE_KEY_UBOOT }}
-            ${{ secrets.GIT_SSH_PRIVATE_KEY_KERNEL }}
+      # - name: Show folders in workspace
+      #   run: ls -l
+
+      # - name: Setup SSH key
+      #   uses: webfactory/ssh-agent@v0.9.1
+      #   with:
+      #     ssh-private-key: |
+      #       ${{ secrets.GIT_SSH_PRIVATE_KEY_UBOOT }}
+      #       ${{ secrets.GIT_SSH_PRIVATE_KEY_KERNEL }}
 
       - name: Build local
         uses: ./
@@ -114,5 +132,6 @@ jobs:
           armbian_token: ${{ secrets.REPO_ACCESS_TOKEN }}
           armbian_pgp_key: ${{ secrets.GPG_KEY }}
           armbian_pgp_password: ${{ secrets.GPG_PASSPHRASE }}
-
-
+          release_tag: ${{ inputs.release_tag }}
+          oss_key_id: ${{ secrets.OSS_KEY_ID }}
+          oss_key_secret: ${{ secrets.OSS_KEY_SECRET }}
