@@ -63,7 +63,7 @@ on:
         type: string
         description: 'Rlease tag'
         required: false
-        default: ''
+        default: '1.0.0'
 
 env:
   BUILD_REPO_OWNER: diverger
