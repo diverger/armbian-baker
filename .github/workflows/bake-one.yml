@@ -1,6 +1,6 @@
-# Build with original
-name: "Build One with original framework"
+name: "Build One Image"
 run-name: "Build One Image (${{ inputs.armbian_board }} / ${{ inputs.armbian_release }} / ${{ inputs.armbian_ui }})"
+
 on:
   workflow_dispatch:
     inputs:
