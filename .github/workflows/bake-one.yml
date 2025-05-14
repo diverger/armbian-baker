@@ -131,7 +131,7 @@ jobs:
           armbian_board: ${{ inputs.armbian_board }}
           armbian_token: ${{ secrets.REPO_ACCESS_TOKEN }}
           armbian_pgp_key: ${{ secrets.GPG_KEY }}
-          armbian_pgp_password: ${{ secrets.GPG_PASSPHRASE }}
+          armbian_pgp_password: ${{ secrets.GPG_KEY_PASSPHRASE }}
           release_tag: ${{ inputs.release_tag }}
           oss_key_id: ${{ secrets.OSS_KEY_ID }}
           oss_key_secret: ${{ secrets.OSS_KEY_SECRET }}
