@@ -58,6 +58,7 @@ on:
         options:
           - orangepi5-plus
           - handy-hpd5kx
+          - handy-hpd5kx-aim7
         default: 'orangepi5-plus'
 
       release_tag:
