@@ -26,6 +26,7 @@ on:
         type: choice
         description: 'Userspace'
         options:
+        - noble
         - jammy
         - mantic
         - bookworm
