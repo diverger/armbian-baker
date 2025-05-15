@@ -1,4 +1,4 @@
-name: Jira Issue Sync
+name: 📝 Jira Issue Sync
 
 on:
   issues:
