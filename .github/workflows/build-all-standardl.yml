@@ -24,9 +24,9 @@ on:
         type: choice
         description: 'Framework build branch'
         options:
+        - armbian
         - main
-        - test
-        default: 'main'
+        default: 'armbian'
       maintainer:
         type: string
         description: 'Maintainer'
@@ -48,7 +48,7 @@ on:
         default: ''
 
 env:
-  BUILD_REPOSITORY: "armbian/build"
+  BUILD_REPOSITORY: "diverger/build"
   BUILD_REF: "${{ inputs.branch || 'main' }}"
   USERPATCHES_REPOSITORY: "armbian/os"
   USERPATCHES_REF: "main"
@@ -116,6 +116,7 @@ jobs:
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
           ref: ${{ env.BUILD_REF }}
+          token: ${{ env.GH_TOKEN }}
           fetch-depth: 0
           clean: false
           path: build
