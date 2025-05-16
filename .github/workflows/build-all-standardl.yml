@@ -140,7 +140,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: diverger/armbian-custom
-          token: ${{ inputs.armbian_token }}
+          token: ${{ env.GH_TOKEN }}
           fetch-depth: 0
           clean: false
           path: custom
