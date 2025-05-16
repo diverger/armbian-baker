@@ -1,4 +1,4 @@
-name: "Build Diverger Standard Support Artifacts"
+name: "Build All Standard Supports"
 
 on:
   workflow_dispatch:
