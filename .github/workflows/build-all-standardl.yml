@@ -67,7 +67,7 @@ concurrency:
 jobs:
 
   version_prep:
-    name: "Version Prep"
+    name: "Determine version"
     if: ${{ github.repository_owner == 'diverger' && github.actor == 'diverger' }}
     runs-on: ubuntu-latest
     steps:
