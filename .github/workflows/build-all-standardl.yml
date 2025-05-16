@@ -292,7 +292,7 @@ jobs:
           platforms: all
 
       - name: Build  ${{matrix.desc}}
-        timeout-minutes: 120
+        timeout-minutes: 180
         id: build
         run: |
           bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -365,7 +365,7 @@ jobs:
           platforms: all
 
       - name: Build  ${{matrix.desc}}
-        timeout-minutes: 120
+        timeout-minutes: 180
         id: build
         run: |
           bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -438,7 +438,7 @@ jobs:
           platforms: all
 
       - name: Build  ${{matrix.desc}}
-        timeout-minutes: 120
+        timeout-minutes: 180
         id: build
         run: |
           bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
