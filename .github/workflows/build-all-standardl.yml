@@ -48,7 +48,7 @@ on:
         default: ''
 
 env:
-  BUILD_REPOSITORY: "diverger/build"
+  BUILD_REPOSITORY: "diverger/armbian-build"
   BUILD_REF: "${{ inputs.branch || 'main' }}"
   USERPATCHES_REPOSITORY: "armbian/os"
   USERPATCHES_REF: "main"
