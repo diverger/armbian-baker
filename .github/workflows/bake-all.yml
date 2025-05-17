@@ -50,6 +50,11 @@ on:
         description: 'Version override'
         required: false
         default: ''
+      commit_id:
+        type: string
+        description: 'Commit id used to build given commit, for test purposes?'
+        required: false
+        default: ''
 
 env:
   BUILD_REPOSITORY: "diverger/armbian-build"
@@ -1021,7 +1026,7 @@ jobs:
   publish-debs-to-repo:
     name: "Download artifacts from ORAS cache"
     runs-on: [ repository ]
-    if: ${{ !failure() && !cancelled() && github.event.inputs.targetsFilterInclude == '' && inputs.ref == '' }} # eg: run if dependencies worked. See https://github.com/orgs/community/discussions/45058#discussioncomment-4817378
+    if: ${{ !failure() && !cancelled() && github.event.inputs.targetsFilterInclude == '' && github.event.inputs.commit_id == '' }} # eg: run if dependencies worked. See https://github.com/orgs/community/discussions/45058#discussioncomment-4817378
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     steps:
 
@@ -1143,7 +1148,7 @@ jobs:
   closing:
     name: "Footer"
     runs-on: ubuntu-latest
-    if: ${{ !failure() && !cancelled() && inputs.ref == '' && (github.event.inputs.nightlybuild || 'no') == 'yes' }}
+    if: ${{ !failure() && !cancelled() && github.event.inputs.commit_id == '' && (github.event.inputs.nightlybuild || 'no') == 'yes' }}
     needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
     steps:
 
