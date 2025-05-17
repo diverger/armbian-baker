@@ -7,23 +7,26 @@ on:
 
   workflow_dispatch:
     inputs:
-      skipImages:
+      skip_images:
         description: 'Skip building images? no = build images, yes = skip images'
         required: true
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
-      checkOci:
+
+      check_oci:
         description: 'Check OCI for existing artifacts? yes = check OCI, no = always build everything'
         required: true
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
-      extraParamsAllBuilds:
+
+      extra_params:
         description: 'Extra params for all builds/jobs (prepare/artifact/image) (eg: DEBUG=yes)'
         required: false
         default: ''
         type: string
+
       branch:
         type: choice
         description: 'Framework build branch'
@@ -54,7 +57,7 @@ on:
         default: ''
         type: string
 
-      nightlybuild:
+      nightly:
         description: 'yes = nightly, no = stable'
         required: false
         options: [ 'yes', 'no' ]
@@ -74,14 +77,14 @@ on:
 
 env:
   BUILD_REPOSITORY: "diverger/armbian-build"
-  BUILD_REF: "${{ inputs.branch || 'main' }}"
+  BUILD_REF: "${{ inputs.commit_id || inputs.branch || 'main' }}"
   USERPATCHES_REPOSITORY: "armbian/os"
   USERPATCHES_REF: "main"
   USERPATCHES_DIR: "userpatches"
   # only used for nightly builds, and for 'community' and 'distribution' releases
   RELEASE_REPOSITORY: "armbian-baker"
   DOCKER_SKIP_UPDATE: "yes"
-  EXTRA_PARAMS_ALL_BUILDS: "${{ inputs.extraParamsAllBuilds || 'UPLOAD_TO_OCI_ONLY=yes' }}"
+  EXTRA_PARAMS_ALL_BUILDS: "${{ inputs.extra_params || 'UPLOAD_TO_OCI_ONLY=yes' }}"
   ARMBIAN_VERSION: "${{ github.event.inputs.armbian_version }}"
   GH_TOKEN: "${{ secrets.REPO_ACCESS_TOKEN }}"
   EXTRA_PARAMS_IMAGE: "SHARE_LOG=no "
@@ -220,9 +223,9 @@ jobs:
             CLEAN_MATRIX=yes \
             MATRIX_ARTIFACT_CHUNKS=4 \
             MATRIX_IMAGE_CHUNKS=4 \
-            CHECK_OCI=${{ github.event.inputs.checkOci || 'no' }} \
+            CHECK_OCI=${{ github.event.inputs.check_oci || 'no' }} \
             TARGETS_FILENAME="targets-diverger-release-standard-support.yml" \
-            SKIP_IMAGES=${{ github.event.inputs.skipImages || 'no'}} \
+            SKIP_IMAGES=${{ github.event.inputs.skip_images || 'no'}} \
             ${{env.EXTRA_PARAMS_ALL_BUILDS}} SHARE_LOG=no
 
       - name: "Logs: ${{ steps.prepare-matrix.outputs.logs_url }}"
@@ -696,7 +699,7 @@ jobs:
 
       - name: "Upload artefacts"
         timeout-minutes: 60
-        if: ${{ ( github.event.inputs.nightlybuild || 'no' ) == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
+        if: ${{ ( github.event.inputs.nightly || 'no' ) == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
         uses: ncipollo/release-action@v1
         with:
           repo: "${{ env.RELEASE_REPOSITORY }}"
@@ -714,7 +717,7 @@ jobs:
       # Upload to OSS
       - name: Upload to oss
         timeout-minutes: 60
-        if: ${{ ( github.event.inputs.nightlybuild || 'no' ) == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        if: ${{ ( github.event.inputs.nightly || 'no' ) == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
@@ -828,7 +831,7 @@ jobs:
 
       - name: "Upload artefacts"
         timeout-minutes: 60
-        if: ${{ ( github.event.inputs.nightlybuild || 'no' ) == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
+        if: ${{ ( github.event.inputs.nightly || 'no' ) == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
         uses: ncipollo/release-action@v1
         with:
           repo: "${{ env.RELEASE_REPOSITORY }}"
@@ -846,7 +849,7 @@ jobs:
       # Upload to OSS
       - name: Upload to oss
         timeout-minutes: 60
-        if: ${{ ( github.event.inputs.nightlybuild || 'no' ) == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        if: ${{ ( github.event.inputs.nightly || 'no' ) == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
@@ -960,7 +963,7 @@ jobs:
 
       - name: "Upload artefacts"
         timeout-minutes: 60
-        if: ${{ ( github.event.inputs.nightlybuild || 'no' ) == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
+        if: ${{ ( github.event.inputs.nightly || 'no' ) == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
         uses: ncipollo/release-action@v1
         with:
           repo: "${{ env.RELEASE_REPOSITORY }}"
@@ -978,7 +981,7 @@ jobs:
       # Upload to OSS
       - name: Upload to oss
         timeout-minutes: 60
-        if: ${{ ( github.event.inputs.nightlybuild || 'no' ) == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        if: ${{ ( github.event.inputs.nightly || 'no' ) == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
@@ -1092,7 +1095,7 @@ jobs:
 
       - name: "Upload artefacts"
         timeout-minutes: 60
-        if: ${{ ( github.event.inputs.nightlybuild || 'no' ) == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
+        if: ${{ ( github.event.inputs.nightly || 'no' ) == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
         uses: ncipollo/release-action@v1
         with:
           repo: "${{ env.RELEASE_REPOSITORY }}"
@@ -1110,7 +1113,7 @@ jobs:
       # Upload to OSS
       - name: Upload to oss
         timeout-minutes: 60
-        if: ${{ ( github.event.inputs.nightlybuild || 'no' ) == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        if: ${{ ( github.event.inputs.nightly || 'no' ) == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
@@ -1222,7 +1225,7 @@ jobs:
       - name: Download the debs
         id: download-debs
         run: |
-          bash ./compile.sh debs-to-repo-download REVISION="${{ needs.matrix_prep.outputs.version }}" BETA=${{ github.event.inputs.nightlybuild || 'no' }} SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+          bash ./compile.sh debs-to-repo-download REVISION="${{ needs.matrix_prep.outputs.version }}" BETA=${{ github.event.inputs.nightly || 'no' }} SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
@@ -1237,7 +1240,7 @@ jobs:
       # Upload the parts too
       - name: Upload to oss
         timeout-minutes: 60
-        if: ${{ (github.event.inputs.skipImages || 'no') == 'no' }}
+        if: ${{ (github.event.inputs.skip_images || 'no') == 'no' }}
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
@@ -1266,7 +1269,7 @@ jobs:
   closing:
     name: "Footer"
     runs-on: ubuntu-latest
-    if: ${{ !failure() && !cancelled() && github.event.inputs.commit_id == '' && (github.event.inputs.nightlybuild || 'no') == 'yes' }}
+    if: ${{ !failure() && !cancelled() && github.event.inputs.commit_id == '' && (github.event.inputs.nightly || 'no') == 'yes' }}
     needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
     steps:
 
