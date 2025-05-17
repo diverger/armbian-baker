@@ -13,20 +13,17 @@ on:
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
-
       checkOci:
         description: 'Check OCI for existing artifacts? yes = check OCI, no = always build everything'
         required: true
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
-
       extraParamsAllBuilds:
         description: 'Extra params for all builds/jobs (prepare/artifact/image) (eg: DEBUG=yes)'
         required: false
         default: ''
         type: string
-
       branch:
         type: choice
         description: 'Framework build branch'
@@ -34,42 +31,44 @@ on:
         - armbian
         - main
         default: 'armbian'
-
+      board:
+        type: choice
+        description: 'Board'
+        required: false
+        options:
+        - orangepi5-plus
+        default: 'all'
       maintainer:
-        type: string
+        type: choice
         description: 'Maintainer'
         required: false
-        default: 'diverger'
-
+        options:
+        - diverger
+        default: 'all'
       targetsFilterInclude:
         description: 'Optional filter for targets to include (e.g., board name). Leave empty for all.'
         required: false
         default: ''
         type: string
-
       nightlybuild:
         description: 'yes = nightly, no = stable'
         required: false
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
-
       bumpversion:
         type: boolean
         description: "Bump version"
         default: false
-
       versionOverride:
         description: 'Version override'
         required: false
         default: ''
-
       commit_id:
         type: string
         description: 'Commit id used to build given commit, for test purposes?'
         required: false
         default: ''
-
 
 env:
   BUILD_REPOSITORY: "diverger/armbian-build"
@@ -199,7 +198,17 @@ jobs:
       - name: Prepare Info JSON and Matrices
         id: prepare-matrix
         run: |
-          # TODO: Add board or maintainer filters
+
+          FILTERS="${{ github.event.inputs.targetsFilterInclude }}"
+
+          if [ -z "${FILTERS}" ] && [ "${{ github.event.inputs.board }}" != "all" ] && [ -n "${{ github.event.inputs.board }}" ]; then
+              FILTERS='"BOARD:${{ github.event.inputs.board }}"'
+          fi
+
+          if [ -z "${FILTERS}" ] && [ "${{ github.event.inputs.maintainer }}" != "all" ] && [ -n "${{ github.event.inputs.board }}" ]; then
+              FILTERS='"BOARD_MAINTAINERS:${{ github.event.inputs.maintainer }}"'
+          fi
+
           cd build
           bash ./compile.sh gha-matrix armbian-images \
             REVISION="${{ needs.version_prep.outputs.version }}" \
