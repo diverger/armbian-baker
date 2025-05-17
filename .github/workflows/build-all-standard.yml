@@ -53,7 +53,8 @@ env:
   USERPATCHES_REPOSITORY: "armbian/os"
   USERPATCHES_REF: "main"
   USERPATCHES_DIR: "userpatches"
-  RELEASE_REPOSITORY: "os"
+  # only used for nightly builds, and for 'community' and 'distribution' releases
+  RELEASE_REPOSITORY: "armbian-baker"
   DOCKER_SKIP_UPDATE: "yes"
   EXTRA_PARAMS_ALL_BUILDS: "${{ inputs.extraParamsAllBuilds || 'UPLOAD_TO_OCI_ONLY=yes' }}"
   VERSION_OVERRIDE: "${{ github.event.inputs.versionOverride }}"
@@ -668,6 +669,343 @@ jobs:
           allowUpdates: true
           artifactErrorsFailBuild: true
           token: "${{ env.GH_TOKEN }}"
-          #token: ${{ secrets.ACCESS_TOKEN }}
-          #token: ${{ env.upload_user }}
+
+  build-images-chunk-2:
+    needs: [ "matrix_prep", "all-artifacts-ready" ]
+    timeout-minutes: 240
+    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-2 == 'yes' ) }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-2) }}
+    name: ${{ matrix.desc || 'Empty I2' }}
+    runs-on: ${{ matrix.runs_on }}
+    steps:
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo
+
+      - name: Checkout build repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v4
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        with:
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rm -rf userpatches.repo
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 60
+        run: |
+          if [ -z "${ImageOS}" ]; then
+          USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=yes MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+
+      - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
+        if: always()
+        run: |
+          echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
+
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      - name: "Upload artefacts"
+        timeout-minutes: 60
+        if: ${{ ( github.event.inputs.nightlybuild || 'no' ) == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
+        uses: ncipollo/release-action@v1
+        with:
+          repo: "${{ env.RELEASE_REPOSITORY }}"
+          artifacts: "output/images/*/*/Armbian_*.*"
+          tag: "${{ needs.matrix_prep.outputs.version }}"
+          omitBody: true
+          replacesArtifacts: true
+          omitName: true
+          makeLatest: false
+          omitPrereleaseDuringUpdate: true
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          token: "${{ env.GH_TOKEN }}"
+
+  build-images-chunk-3:
+    needs: [ "matrix_prep", "all-artifacts-ready" ]
+    timeout-minutes: 240
+    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-3 == 'yes' ) }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-3) }}
+    name: ${{ matrix.desc || 'Empty I3' }}
+    runs-on: ${{ matrix.runs_on }}
+    steps:
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo
+
+      - name: Checkout build repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v4
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        with:
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rm -rf userpatches.repo
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 60
+        run: |
+          if [ -z "${ImageOS}" ]; then
+          USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=yes MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+
+      - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
+        if: always()
+        run: |
+          echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
+
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      - name: "Upload artefacts"
+        timeout-minutes: 60
+        if: ${{ ( github.event.inputs.nightlybuild || 'no' ) == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
+        uses: ncipollo/release-action@v1
+        with:
+          repo: "${{ env.RELEASE_REPOSITORY }}"
+          artifacts: "output/images/*/*/Armbian_*.*"
+          tag: "${{ needs.matrix_prep.outputs.version }}"
+          omitBody: true
+          replacesArtifacts: true
+          omitName: true
+          makeLatest: false
+          omitPrereleaseDuringUpdate: true
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          token: "${{ env.GH_TOKEN }}"
+
+  build-images-chunk-4:
+    needs: [ "matrix_prep", "all-artifacts-ready" ]
+    timeout-minutes: 240
+    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-4 == 'yes' ) }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-4) }}
+    name: ${{ matrix.desc || 'Empty I4' }}
+    runs-on: ${{ matrix.runs_on }}
+    steps:
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo
+
+      - name: Checkout build repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v4
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        with:
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rm -rf userpatches.repo
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 60
+        run: |
+          if [ -z "${ImageOS}" ]; then
+          USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=yes MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+
+      - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
+        if: always()
+        run: |
+          echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
+
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      - name: "Upload artefacts"
+        timeout-minutes: 60
+        if: ${{ ( github.event.inputs.nightlybuild || 'no' ) == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
+        uses: ncipollo/release-action@v1
+        with:
+          repo: "${{ env.RELEASE_REPOSITORY }}"
+          artifacts: "output/images/*/*/Armbian_*.*"
+          tag: "${{ needs.matrix_prep.outputs.version }}"
+          omitBody: true
+          replacesArtifacts: true
+          omitName: true
+          makeLatest: false
+          omitPrereleaseDuringUpdate: true
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          token: "${{ env.GH_TOKEN }}"
 
