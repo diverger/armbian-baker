@@ -13,17 +13,20 @@ on:
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
+
       checkOci:
         description: 'Check OCI for existing artifacts? yes = check OCI, no = always build everything'
         required: true
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
+
       extraParamsAllBuilds:
         description: 'Extra params for all builds/jobs (prepare/artifact/image) (eg: DEBUG=yes)'
         required: false
         default: ''
         type: string
+
       branch:
         type: choice
         description: 'Framework build branch'
@@ -31,30 +34,42 @@ on:
         - armbian
         - main
         default: 'armbian'
+
       maintainer:
         type: string
         description: 'Maintainer'
         required: false
         default: 'diverger'
+
+      targetsFilterInclude:
+        description: 'Optional filter for targets to include (e.g., board name). Leave empty for all.'
+        required: false
+        default: ''
+        type: string
+
       nightlybuild:
         description: 'yes = nightly, no = stable'
         required: false
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
+
       bumpversion:
         type: boolean
         description: "Bump version"
         default: false
+
       versionOverride:
         description: 'Version override'
         required: false
         default: ''
+
       commit_id:
         type: string
         description: 'Commit id used to build given commit, for test purposes?'
         required: false
         default: ''
+
 
 env:
   BUILD_REPOSITORY: "diverger/armbian-build"
@@ -258,7 +273,7 @@ jobs:
         run: uptime
 
   all-artifacts-and-images-ready:
-    name: "17 artifacts and 16 image chunks ready"
+    name: "4 artifacts and 4 image chunks ready"
     runs-on: ubuntu-latest # not going to run, anyway, but is required.
     if: ${{ !cancelled() && ( 1 == 2 ) }} # eg: never run.
     needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
@@ -1128,7 +1143,7 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_KEY }}
           passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
 
-      # TODO: Add code upload the images
+      # TODO: Add code to upload the images
 
       # TODO: In official version, next will inform the armbian/os repo to update the repository, what should we do?
 
