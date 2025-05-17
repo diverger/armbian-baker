@@ -1130,7 +1130,7 @@ jobs:
 
   publish-debs-to-repo:
     name: "Download artifacts from ORAS cache"
-    runs-on: [ repository ]
+    runs-on: ubuntu-latest
     if: ${{ !failure() && !cancelled() && github.event.inputs.targetsFilterInclude == '' && github.event.inputs.commit_id == '' }} # eg: run if dependencies worked. See https://github.com/orgs/community/discussions/45058#discussioncomment-4817378
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     steps:
@@ -1144,25 +1144,6 @@ jobs:
           haskell: true
           large-packages: true
           swap-storage: true
-
-      # Prepare dependencies.
-      # If no /usr/bin/gpg, install gnupg2
-      # If no /usr/bin/reprepro, install reprepro
-      # If no /usr/bin/lftp, install lftp
-      - name: Install dependencies
-        run: |
-          if [ ! -e /usr/bin/gpg ]; then
-            sudo apt-get update
-            sudo apt-get install -y gnupg2
-          fi
-          if [ ! -e /usr/bin/reprepro ]; then
-            sudo apt-get update
-            sudo apt-get install -y reprepro
-          fi
-          if [ ! -e /usr/bin/lftp ]; then
-            sudo apt-get update
-            sudo apt-get install -y lftp
-          fi
 
       # Login to ghcr.io, for later uploading rootfs to ghcr.io
       - name: Docker Login to GitHub Container Registry
