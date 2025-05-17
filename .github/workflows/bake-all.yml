@@ -31,6 +31,7 @@ on:
         - armbian
         - main
         default: 'armbian'
+        
       board:
         type: choice
         description: 'Board'
@@ -38,6 +39,7 @@ on:
         options:
         - orangepi5-plus
         default: 'all'
+
       maintainer:
         type: choice
         description: 'Maintainer'
@@ -45,25 +47,25 @@ on:
         options:
         - diverger
         default: 'all'
+
       targetsFilterInclude:
         description: 'Optional filter for targets to include (e.g., board name). Leave empty for all.'
         required: false
         default: ''
         type: string
+
       nightlybuild:
         description: 'yes = nightly, no = stable'
         required: false
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
-      bumpversion:
-        type: boolean
-        description: "Bump version"
-        default: false
+
       versionOverride:
         description: 'Version override'
         required: false
         default: ''
+
       commit_id:
         type: string
         description: 'Commit id used to build given commit, for test purposes?'
