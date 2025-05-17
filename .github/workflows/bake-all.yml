@@ -31,7 +31,7 @@ on:
         - armbian
         - main
         default: 'armbian'
-        
+
       board:
         type: choice
         description: 'Board'
@@ -61,8 +61,8 @@ on:
         type: choice
         default: 'no'
 
-      versionOverride:
-        description: 'Version override'
+      armbian_version:
+        description: 'The version of Armbian build framework'
         required: false
         default: ''
 
@@ -82,7 +82,7 @@ env:
   RELEASE_REPOSITORY: "armbian-baker"
   DOCKER_SKIP_UPDATE: "yes"
   EXTRA_PARAMS_ALL_BUILDS: "${{ inputs.extraParamsAllBuilds || 'UPLOAD_TO_OCI_ONLY=yes' }}"
-  VERSION_OVERRIDE: "${{ github.event.inputs.versionOverride }}"
+  ARMBIAN_VERSION: "${{ github.event.inputs.armbian_version }}"
   GH_TOKEN: "${{ secrets.REPO_ACCESS_TOKEN }}"
   EXTRA_PARAMS_IMAGE: "SHARE_LOG=no "
 
@@ -109,8 +109,9 @@ jobs:
       - name: Read stable version
         run: |
           mkdir -p downloads
-          cat "stable.json" | jq '.version' | sed "s/\"//g" | sed 's/^/VERSION_OVERRIDE=/' >> $GITHUB_ENV
-          cat "stable.json" | jq '.version' | sed "s/\"//g" > downloads/version
+          cat "stable.json" | jq '.version' | sed "s/\"//g" | sed 's/^/ARMBIAN_VERSION=/' >> $GITHUB_ENV
+          [[ "${{ github.event.inputs.armbian_version }}" != '' ]] && echo "ARMBIAN_VERSION=${{ github.event.inputs.armbian_version }}" >> $GITHUB_ENV
+          echo "$ARMBIAN_VERSION" > downloads/version
 
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
@@ -122,7 +123,7 @@ jobs:
       - name: Save
         id: releases
         run: |
-          echo "version=${{ env.VERSION_OVERRIDE }}" >> $GITHUB_OUTPUT
+          echo "version=${{ env.ARMBIAN_VERSION }}" >> $GITHUB_OUTPUT
 
     outputs:
 
