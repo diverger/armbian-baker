@@ -2,13 +2,11 @@ name: "Build All Standard Supports"
 run-name: >
   Build by @${{ github.actor }} with ${{
     (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_source) ||
-    (github.event_name == 'repository_dispatch' && github.event.client_payload.trigger_source) ||
+    (github.event_name == 'repository_dispatch' && ) ||
     'manual'
   }}
   (Release: ${{
-    (github.event_name == 'workflow_dispatch' && 'N/A') ||
-    (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) ||
-    'ubuntu-latest'
+    (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) || 'N/A'
   }})
 
 on:
@@ -100,7 +98,7 @@ env:
   GH_TOKEN: "${{ secrets.REPO_ACCESS_TOKEN }}"
   EXTRA_PARAMS_IMAGE: "SHARE_LOG=no "
 
-  RELEASE_TAG: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag) || (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) || '' }}
+  RELEASE_TAG: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) || '' }}
   RELEASE_ID: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_id) || '' }}
 
 concurrency:
