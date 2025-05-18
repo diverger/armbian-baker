@@ -75,12 +75,6 @@ on:
         required: false
         default: ''
 
-      release_tag:
-        type: string
-        description: 'Release ID used to publish release'
-        required: false
-        default: ''
-
 env:
   BUILD_REPOSITORY: "diverger/armbian-build"
   BUILD_REF: "${{ inputs.armbian_commit || inputs.branch || 'main' }}"
