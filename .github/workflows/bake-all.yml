@@ -1331,7 +1331,7 @@ jobs:
       - name: "Keep only 7 days of workflow logs"
         uses: igorjs/gh-actions-clean-workflow@v6
         with:
-          token: "${{ env.GH_TOKEN }}"
+          token: ${{ env.GH_TOKEN }}
           runs_older_than: 7 # optional
           runs_to_keep: 0 # optional
 
@@ -1353,7 +1353,7 @@ jobs:
 
         with:
           release_id: ${{ env.RELEASE_ID }}
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          token: ${{ env.GH_TOKEN }}
           draft: true
           overwrite: true
           file: |
