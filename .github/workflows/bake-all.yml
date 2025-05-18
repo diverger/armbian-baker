@@ -147,7 +147,7 @@ jobs:
         id: releases
         run: |
           echo "version=${{ env.ARMBIAN_VERSION }}" >> $GITHUB_OUTPUT
-          echo "release_tag=${{ env.RELEASE_TAG }}" >> $GITHUB_OUTPUT"
+          echo "release_tag=${{ env.RELEASE_TAG }}" >> $GITHUB_OUTPUT
 
     outputs:
 
