@@ -3,7 +3,7 @@ name: "Build All Standard Supports"
 on:
 
   repository_dispatch:
-    types: [build-all-standard]
+    types: [trigger-build-all]
 
   workflow_dispatch:
     inputs:
@@ -51,7 +51,7 @@ on:
         - diverger
         default: 'all'
 
-      targetsFilterInclude:
+      targets_filter_incs:
         description: 'Optional filter for targets to include (e.g., board name). Leave empty for all.'
         required: false
         default: ''
@@ -69,15 +69,21 @@ on:
         required: false
         default: ''
 
-      commit_id:
+      armbian_commit:
         type: string
         description: 'Commit id used to build given commit, for test purposes?'
         required: false
         default: ''
 
+      release_tag:
+        type: string
+        description: 'Release ID used to publish release'
+        required: false
+        default: ''
+
 env:
   BUILD_REPOSITORY: "diverger/armbian-build"
-  BUILD_REF: "${{ inputs.commit_id || inputs.branch || 'main' }}"
+  BUILD_REF: "${{ inputs.armbian_commit || inputs.branch || 'main' }}"
   USERPATCHES_REPOSITORY: "armbian/os"
   USERPATCHES_REF: "main"
   USERPATCHES_DIR: "userpatches"
@@ -88,6 +94,9 @@ env:
   ARMBIAN_VERSION: "${{ github.event.inputs.armbian_version }}"
   GH_TOKEN: "${{ secrets.REPO_ACCESS_TOKEN }}"
   EXTRA_PARAMS_IMAGE: "SHARE_LOG=no "
+
+  RELEASE_TAG: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag) || (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) || '' }}
+  RELEASE_ID: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_id) || '' }}
 
 concurrency:
   group: diverger-standard-support
@@ -123,15 +132,23 @@ jobs:
           path: downloads
           retention-days: 5
 
+      - name: 'Make release tag'
+        if: ${{ env.RELEASE_TAG == '' }}
+        run: |
+          # Make release tag from current date and time
+          echo "RELEASE_TAG=$(TZ='Asia/Shanghai' date +"%Y-%m-%d-%H-%M-%S")" >> $GITHUB_ENV
+
       - name: Save
         id: releases
         run: |
           echo "version=${{ env.ARMBIAN_VERSION }}" >> $GITHUB_OUTPUT
+          echo "release_tag=${{ env.RELEASE_TAG }}" >> $GITHUB_OUTPUT"
 
     outputs:
 
       # not related to matrix
       version: ${{ steps.releases.outputs.version }}
+      release_tag: ${{ steps.releases.outputs.release_tag }}
 
   matrix_prep:
     name: "JSON matrix: 4/4 :: 4 artifact chunks, 4 image chunks"
@@ -205,15 +222,15 @@ jobs:
         id: prepare-matrix
         run: |
 
-          FILTERS="${{ github.event.inputs.targetsFilterInclude }}"
+          FILTERS="${{ github.event.inputs.targets_filter_incs }}"
 
           if [ -z "${FILTERS}" ] && [ "${{ github.event.inputs.board }}" != "all" ] && [ -n "${{ github.event.inputs.board }}" ]; then
               FILTERS='"BOARD:${{ github.event.inputs.board }}"'
           fi
 
-          if [ -z "${FILTERS}" ] && [ "${{ github.event.inputs.maintainer }}" != "all" ] && [ -n "${{ github.event.inputs.board }}" ]; then
-              FILTERS='"BOARD_MAINTAINERS:${{ github.event.inputs.maintainer }}"'
-          fi
+          # if [ -z "${FILTERS}" ] && [ "${{ github.event.inputs.maintainer }}" != "all" ] && [ -n "${{ github.event.inputs.board }}" ]; then
+          #     FILTERS='"BOARD_MAINTAINERS:${{ github.event.inputs.maintainer }}"'
+          # fi
 
           cd build
           bash ./compile.sh gha-matrix armbian-images \
@@ -247,6 +264,7 @@ jobs:
       # not related to matrix
       build-sha1: ${{ steps.latest-commit.outputs.sha1 }}
       version: ${{ needs.version_prep.outputs.version }}
+      release_tag: ${{ needs.version_prep.outputs.release_tag }}
 
       artifacts-chunk-json-1: ${{ steps.prepare-matrix.outputs.artifacts-chunk-json-1 }}
       artifacts-chunk-not-empty-1: ${{ steps.prepare-matrix.outputs.artifacts-chunk-not-empty-1 }}
@@ -726,7 +744,17 @@ jobs:
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           assets: |
-            ./output/images/**:/armbian/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+
+      - name: Report OSS uploading status
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
+        shell: bash
+        run: |
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
+          echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
+          mkdir -p oss-urls
+          echo "${OSS_URL}" >> oss-urls/image-urls.txt
+          echo "OSS URL has been appended to oss-urls/image-urls.txt"
 
   build-images-chunk-2:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -858,7 +886,17 @@ jobs:
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           assets: |
-            ./output/images/**:/armbian/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+
+      - name: Report OSS uploading status
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
+        shell: bash
+        run: |
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
+          echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
+          mkdir -p oss-urls
+          echo "${OSS_URL}" >> oss-urls/image-urls.txt
+          echo "OSS URL has been appended to oss-urls/image-urls.txt"
 
   build-images-chunk-3:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -990,7 +1028,17 @@ jobs:
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           assets: |
-            ./output/images/**:/armbian/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+
+      - name: Report OSS uploading status
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
+        shell: bash
+        run: |
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
+          echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
+          mkdir -p oss-urls
+          echo "${OSS_URL}" >> oss-urls/image-urls.txt
+          echo "OSS URL has been appended to oss-urls/image-urls.txt"
 
   build-images-chunk-4:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -1111,7 +1159,7 @@ jobs:
           token: "${{ env.GH_TOKEN }}"
 
       # Upload to OSS
-      - name: Upload to oss
+      - name: Upload to OSS
         timeout-minutes: 60
         if: ${{ ( github.event.inputs.nightly || 'no' ) == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
@@ -1122,7 +1170,24 @@ jobs:
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           assets: |
-            ./output/images/**:/armbian/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+
+      - name: Report OSS uploading status
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
+        shell: bash
+        run: |
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
+          echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
+          mkdir -p oss-urls
+          echo "${OSS_URL}" >> oss-urls/image-urls.txt
+          echo "OSS URL has been appended to oss-urls/image-urls.txt"
+
+      - name: Report OSS uploading status
+        shell: bash
+        run: |
+            echo "Uploaded to OSS URL: ${{ steps.upload_to_oss.outputs.url }}"
+            # Append the OSS URL to a file
+            echo "${{ steps.upload_to_oss.outputs.url }}" >> oss-urls/image-urls.txt
 
 # template file: 750.single_repo.yaml
 
@@ -1131,7 +1196,7 @@ jobs:
   publish-debs-to-repo:
     name: "Download artifacts from ORAS cache"
     runs-on: ubuntu-latest
-    if: ${{ !failure() && !cancelled() && github.event.inputs.targetsFilterInclude == '' && github.event.inputs.commit_id == '' }} # eg: run if dependencies worked. See https://github.com/orgs/community/discussions/45058#discussioncomment-4817378
+    if: ${{ !failure() && !cancelled() && github.event.inputs.targets_filter_incs == '' && github.event.inputs.armbian_commit == '' }} # eg: run if dependencies worked. See https://github.com/orgs/community/discussions/45058#discussioncomment-4817378
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     steps:
 
@@ -1250,17 +1315,41 @@ jobs:
   closing:
     name: "Footer"
     runs-on: ubuntu-latest
-    if: ${{ !failure() && !cancelled() && github.event.inputs.commit_id == '' && (github.event.inputs.nightly || 'no') == 'yes' }}
+    if: ${{ !failure() && !cancelled() && github.event.inputs.armbian_commit == '' && (github.event.inputs.nightly || 'no') == 'yes' }}
     needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
     steps:
 
       # For now, we won't build image files for nightly builds
 
       # Cleaning logs
-      - name: "Keep only 14 days of workflow logs"
+      - name: "Keep only 7 days of workflow logs"
         uses: igorjs/gh-actions-clean-workflow@v6
         with:
           token: "${{ env.GH_TOKEN }}"
           runs_older_than: 7 # optional
           runs_to_keep: 0 # optional
 
+  release:
+    name: "Release"
+    runs-on: ubuntu-latest
+    if: ${{ !failure() && !cancelled() && (github.event_name == 'repository_dispatch' && github.event.client_payload.release_id) }}
+    needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
+    steps:
+
+      - name: "Generate release stamp"
+        id: release_stamp
+        run: |
+          echo "Release version: ${{ needs.matrix_prep.outputs.release_tag }}" >> release.txt
+          echo "Armbian version: ${{ needs.matrix_prep.outputs.version }}" >> release.txt
+
+      - name: Publish to Github Releases
+        uses: xresloader/upload-to-github-release@v1
+
+        with:
+          release_id: ${{ env.RELEASE_ID }}
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          draft: true
+          overwrite: true
+          file: |
+            Release.txt
+            oss-urls/image-urls.txt
