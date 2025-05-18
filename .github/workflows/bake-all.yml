@@ -136,10 +136,11 @@ jobs:
           retention-days: 5
 
       - name: 'Make release tag'
-        if: ${{ env.RELEASE_TAG == '' }}
+        id: make_release_tag
         run: |
-          # Make release tag from current date and time
-          echo "RELEASE_TAG=$(TZ='Asia/Shanghai' date +"%Y-%m-%d-%H-%M-%S")" >> $GITHUB_ENV
+          if [ -z "$RELEASE_TAG" ]; then
+            echo "RELEASE_TAG=$(TZ='Asia/Shanghai' date +"%Y-%m-%d-%H-%M-%S")" >> $GITHUB_ENV
+          fi
 
       - name: Save
         id: releases
