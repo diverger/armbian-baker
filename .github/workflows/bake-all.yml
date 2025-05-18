@@ -1357,5 +1357,5 @@ jobs:
           draft: true
           overwrite: true
           file: |
-            Release.txt
+            release.txt
             oss-urls/image-urls.txt
