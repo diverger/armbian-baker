@@ -1391,8 +1391,7 @@ jobs:
           target_repo: armbian-custom
           branches: main
           token: ${{ env.GH_TOKEN }}
-          draft: true
           overwrite: true
           file: "release.txt;oss-urls/image-urls.txt"
-          verbose: false
+          verbose: true
 
