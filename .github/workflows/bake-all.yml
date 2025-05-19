@@ -1387,6 +1387,8 @@ jobs:
 
         with:
           release_id: ${{ env.RELEASE_ID }}
+          target_owner: ${{ github.repository_owner }}
+          target_repo: armbian-custom
           token: ${{ env.GH_TOKEN }}
           draft: true
           overwrite: true
