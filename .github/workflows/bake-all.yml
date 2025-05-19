@@ -1403,7 +1403,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           repo: 'armbian-custom'
           tag: ${{ env.RELEASE_TAG }}
-          artifacts: 'release.txt;oss-urls/image-urls.txt'
+          artifacts: 'release.txt,oss-urls/image-urls.txt'
           artifactContentType: 'text/plain'
           allowUpdates: true
           replacesArtifacts: true
