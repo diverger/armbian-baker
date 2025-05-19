@@ -1382,16 +1382,34 @@ jobs:
           cat combined-oss-urls/* > oss-urls/image-urls.txt
           echo "Combined OSS URLs into oss-urls/image-urls.txt"
 
-      - name: Publish to Github Releases
-        uses: xresloader/upload-to-github-release@v1
+      # - name: Publish to Github Releases
+      #   uses: xresloader/upload-to-github-release@v1
 
+      #   with:
+      #     release_id: ${{ env.RELEASE_ID }}
+      #     target_owner: ${{ github.repository_owner }}
+      #     target_repo: armbian-custom
+      #     branches: main
+      #     token: ${{ env.GH_TOKEN }}
+      #     overwrite: true
+      #     file: "release.txt;oss-urls/image-urls.txt"
+      #     verbose: true
+
+      - name: Publish to Github releases
+        id: create_release
+        uses: ncipollo/release-action@v1
         with:
-          release_id: ${{ env.RELEASE_ID }}
-          target_owner: ${{ github.repository_owner }}
-          target_repo: armbian-custom
-          branches: main
           token: ${{ env.GH_TOKEN }}
-          overwrite: true
-          file: "release.txt;oss-urls/image-urls.txt"
-          verbose: true
+          owner: ${{ github.repository_owner }}
+          repo: armbian-custom
+          tag: ${{ env.RELEASE_TAG }}
+          allowUpdates: true
+          replacesArtifacts: true
+          omitBodyDuringUpdate: true
+          omitBody: true
+          omitName: true
+          makeLatest: false
+          omitPrereleaseDuringUpdate: true
+          omitDraftDuringUpdate: true
+          draft: true
 
