@@ -761,6 +761,13 @@ jobs:
           echo "${OSS_URL}" >> oss-urls/image-urls.txt
           echo "OSS URL has been appended to oss-urls/image-urls.txt"
 
+      - name: Upload OSS URL
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I1' }}
+          path: oss-urls/image-urls.txt
+
   build-images-chunk-2:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
@@ -902,6 +909,13 @@ jobs:
           mkdir -p oss-urls
           echo "${OSS_URL}" >> oss-urls/image-urls.txt
           echo "OSS URL has been appended to oss-urls/image-urls.txt"
+
+      - name: Upload OSS URL
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I2' }}
+          path: oss-urls/image-urls.txt
 
   build-images-chunk-3:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -1045,6 +1059,13 @@ jobs:
           echo "${OSS_URL}" >> oss-urls/image-urls.txt
           echo "OSS URL has been appended to oss-urls/image-urls.txt"
 
+      - name: Upload OSS URL
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I3' }}
+          path: oss-urls/image-urls.txt
+
   build-images-chunk-4:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
@@ -1187,12 +1208,12 @@ jobs:
           echo "${OSS_URL}" >> oss-urls/image-urls.txt
           echo "OSS URL has been appended to oss-urls/image-urls.txt"
 
-      - name: Report OSS uploading status
-        shell: bash
-        run: |
-            echo "Uploaded to OSS URL: ${{ steps.upload_to_oss.outputs.url }}"
-            # Append the OSS URL to a file
-            echo "${{ steps.upload_to_oss.outputs.url }}" >> oss-urls/image-urls.txt
+      - name: Upload OSS URL
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I4' }}
+          path: oss-urls/image-urls.txt
 
 # template file: 750.single_repo.yaml
 
@@ -1347,6 +1368,18 @@ jobs:
         run: |
           echo "Release version: ${{ needs.matrix_prep.outputs.release_tag }}" >> release.txt
           echo "Armbian version: ${{ needs.matrix_prep.outputs.version }}" >> release.txt
+
+      - name: Download all OSS URL artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: oss-urls-*
+          path: combined-oss-urls
+
+      - name: Combine all OSS URLs
+        run: |
+          mkdir -p oss-urls
+          cat combined-oss-urls/* > oss-urls/image-urls.txt
+          echo "Combined OSS URLs into oss-urls/image-urls.txt"
 
       - name: Publish to Github Releases
         uses: xresloader/upload-to-github-release@v1
