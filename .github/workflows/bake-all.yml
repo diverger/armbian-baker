@@ -1390,6 +1390,6 @@ jobs:
           token: ${{ env.GH_TOKEN }}
           draft: true
           overwrite: true
-          file: |
-            release.txt
-            oss-urls/image-urls.txt
+          file: "release.txt;oss-urls/image-urls.txt"
+          verbose: false
+
