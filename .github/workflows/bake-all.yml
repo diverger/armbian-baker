@@ -245,7 +245,7 @@ jobs:
             CLEAN_MATRIX=yes \
             MATRIX_ARTIFACT_CHUNKS=4 \
             MATRIX_IMAGE_CHUNKS=4 \
-            CHECK_OCI=${{ github.event.inputs.check_oci || 'no' }} \
+            CHECK_OCI=${{ github.event.inputs.check_oci || 'yes' }} \
             TARGETS_FILENAME="targets-diverger-release-standard-support.yml" \
             SKIP_IMAGES=${{ github.event.inputs.skip_images || 'no'}} \
             ${{env.EXTRA_PARAMS_ALL_BUILDS}} SHARE_LOG=no
