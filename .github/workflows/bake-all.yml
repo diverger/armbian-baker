@@ -1215,7 +1215,8 @@ jobs:
   publish-debs-to-repo:
     name: "Download artifacts from ORAS cache"
     runs-on: ubuntu-latest
-    if: ${{ !failure() && !cancelled() && github.event.inputs.targets_filter_incs == '' && github.event.client_payload.armbian_ref == '' }}
+    # This will run in non-test mode
+    if: ${{ !failure() && !cancelled() && github.event.client_payload.custom_ref == '' }}
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     steps:
 
@@ -1314,7 +1315,7 @@ jobs:
           key-secret: ${{ secrets.OSS_KEY_SECRET }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
-          assets: ./output/debs***:/armbian/${{ needs.matrix_prep.outputs.version }}/partial/
+          assets: ./output/debs***:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/partial/
 
       # TODO: In official version, next will inform the armbian/os repo to update the repository, what should we do?
 
