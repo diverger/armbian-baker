@@ -18,14 +18,14 @@ on:
     inputs:
       skip_images:
         description: 'Skip building images? no = build images, yes = skip images'
-        required: true
+        required: false
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
 
       check_oci:
         description: 'Check OCI for existing artifacts? yes = check OCI, no = always build everything'
-        required: true
+        required: false
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
