@@ -1288,7 +1288,7 @@ jobs:
       ${{
         !failure() && !cancelled() &&
         ((github.event_name == 'workflow_dispatch' && github.event.inputs.nightly == 'yes') ||
-        (github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ref == '' && github.event.client_payload.nightly == 'yes'))}}
+        (github.event_name == 'repository_dispatch' && github.event.client_payload.custom_ref == '' && github.event.client_payload.nightly == 'yes'))}}
 
     needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
     steps:
