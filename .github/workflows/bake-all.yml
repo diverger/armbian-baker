@@ -728,9 +728,9 @@ jobs:
 
       # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
       # Upload to OSS
-      - name: Upload to oss
+      - name: Upload to OSS
         timeout-minutes: 60
-        if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
@@ -859,28 +859,11 @@ jobs:
           name: build-info-json
           path: output/info
 
-      - name: "Upload artefacts"
-        timeout-minutes: 60
-        if: ${{ env.NIGHTLY_BUILD == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
-        uses: ncipollo/release-action@v1
-        with:
-          repo: "${{ env.RELEASE_REPOSITORY }}"
-          artifacts: "output/images/*/*/Armbian_*.*"
-          tag: "${{ needs.matrix_prep.outputs.version }}"
-          omitBody: true
-          replacesArtifacts: true
-          omitName: true
-          makeLatest: false
-          omitPrereleaseDuringUpdate: true
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          token: "${{ env.GH_TOKEN }}"
-
       # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
       # Upload to OSS
-      - name: Upload to oss
+      - name: Upload to OSS
         timeout-minutes: 60
-        if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
@@ -1009,28 +992,11 @@ jobs:
           name: build-info-json
           path: output/info
 
-      - name: "Upload artefacts"
-        timeout-minutes: 60
-        if: ${{ env.NIGHTLY_BUILD == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
-        uses: ncipollo/release-action@v1
-        with:
-          repo: "${{ env.RELEASE_REPOSITORY }}"
-          artifacts: "output/images/*/*/Armbian_*.*"
-          tag: "${{ needs.matrix_prep.outputs.version }}"
-          omitBody: true
-          replacesArtifacts: true
-          omitName: true
-          makeLatest: false
-          omitPrereleaseDuringUpdate: true
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          token: "${{ env.GH_TOKEN }}"
-
       # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
       # Upload to OSS
-      - name: Upload to oss
+      - name: Upload to OSS
         timeout-minutes: 60
-        if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
@@ -1159,28 +1125,11 @@ jobs:
           name: build-info-json
           path: output/info
 
-      - name: "Upload artefacts"
-        timeout-minutes: 60
-        if: ${{ env.NIGHTLY_BUILD == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
-        uses: ncipollo/release-action@v1
-        with:
-          repo: "${{ env.RELEASE_REPOSITORY }}"
-          artifacts: "output/images/*/*/Armbian_*.*"
-          tag: "${{ needs.matrix_prep.outputs.version }}"
-          omitBody: true
-          replacesArtifacts: true
-          omitName: true
-          makeLatest: false
-          omitPrereleaseDuringUpdate: true
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          token: "${{ env.GH_TOKEN }}"
-
       # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
       # Upload to OSS
       - name: Upload to OSS
         timeout-minutes: 60
-        if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
