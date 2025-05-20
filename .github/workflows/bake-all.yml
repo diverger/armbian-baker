@@ -145,6 +145,9 @@ jobs:
             echo "RELEASE_TAG=$(TZ='Asia/Shanghai' date +"%Y-%m-%d-%H-%M-%S")" >> $GITHUB_ENV
           fi
 
+      # Note: The officital version will create a pre-release here, for nightly build and image not skipped
+      # we don't need it here
+
       - name: Save
         id: releases
         run: |
@@ -723,22 +726,7 @@ jobs:
           name: build-info-json
           path: output/info
 
-      - name: "Upload artefacts"
-        timeout-minutes: 60
-        if: ${{ env.NIGHTLY_BUILD == 'yes' || env.RELEASE_REPOSITORY == 'community' || env.RELEASE_REPOSITORY == 'distribution' }}
-        uses: ncipollo/release-action@v1
-        with:
-          repo: "${{ env.RELEASE_REPOSITORY }}"
-          artifacts: "output/images/*/*/Armbian_*.*"
-          tag: "${{ needs.matrix_prep.outputs.version }}"
-          omitBody: true
-          replacesArtifacts: true
-          omitName: true
-          makeLatest: false
-          omitPrereleaseDuringUpdate: true
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          token: "${{ env.GH_TOKEN }}"
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
 
       # Upload to OSS
       - name: Upload to oss
@@ -752,7 +740,7 @@ jobs:
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           assets: |
-            ./output/images/**:/armbian/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable'}}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -1367,7 +1355,7 @@ jobs:
   release:
     name: "Release"
     runs-on: ubuntu-latest
-    if: ${{ !failure() && !cancelled() && (github.event_name == 'repository_dispatch' && github.event.client_payload.release_id) }}
+    if: ${{ !failure() && !cancelled() && (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) }}
     needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
     steps:
 
