@@ -1189,9 +1189,7 @@ jobs:
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           assets: |
-            "./output/images/**:/\
-            armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/\
-            ${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/"
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -1217,7 +1215,7 @@ jobs:
   publish-debs-to-repo:
     name: "Download artifacts from ORAS cache"
     runs-on: ubuntu-latest
-    if: ${{ !failure() && !cancelled() && github.event.inputs.targets_filter_incs == '' && github.event.inputs.armbian_ref == '' }} # eg: run if dependencies worked. See https://github.com/orgs/community/discussions/45058#discussioncomment-4817378
+    if: ${{ !failure() && !cancelled() && github.event.inputs.targets_filter_incs == '' && github.event.client_payload.armbian_ref == '' }}
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     steps:
 
@@ -1316,8 +1314,7 @@ jobs:
           key-secret: ${{ secrets.OSS_KEY_SECRET }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
-          assets: |
-            ./output/debs***:/armbian/${{ needs.matrix_prep.outputs.version }}/partial/
+          assets: ./output/debs***:/armbian/${{ needs.matrix_prep.outputs.version }}/partial/
 
       # TODO: In official version, next will inform the armbian/os repo to update the repository, what should we do?
 
@@ -1340,14 +1337,13 @@ jobs:
     if: >
       ${{
         !failure() && !cancelled() &&
-        ((github.event_name == 'workflow_dispatch' && github.event.inputs.armbian_ref == '' && github.event.inputs.nightly == 'yes') ||
+        ((github.event_name == 'workflow_dispatch' && github.event.inputs.nightly == 'yes') ||
         (github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ref == '' && github.event.client_payload.nightly == 'yes'))}}
 
     needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
     steps:
 
       # For now, we won't build image files for nightly builds
-
       # Cleaning logs
       - name: "Keep only 7 days of workflow logs"
         uses: igorjs/gh-actions-clean-workflow@v6
