@@ -100,8 +100,7 @@ env:
   NIGHTLY_BUILD: >
     ${{
       (github.event_name == 'repository_dispatch' && github.event.client_payload.nightly) ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.nightly) ||
-      'yes'
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.nightly)
     }}
 
 concurrency:
@@ -248,7 +247,7 @@ jobs:
             CLEAN_MATRIX=yes \
             MATRIX_ARTIFACT_CHUNKS=4 \
             MATRIX_IMAGE_CHUNKS=4 \
-            CHECK_OCI=${{ github.event.inputs.check_oci || 'yes' }} \
+            CHECK_OCI=${{ env.NIGHTLY_BUILD == 'yes' &&  'yes' || github.event.inputs.check_oci }} \
             TARGETS_FILENAME="targets-diverger-release-standard-support.yml" \
             SKIP_IMAGES=${{ github.event.inputs.skip_images || 'no'}} \
             ${{env.EXTRA_PARAMS_ALL_BUILDS}} SHARE_LOG=no
