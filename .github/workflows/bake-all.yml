@@ -81,7 +81,7 @@ on:
 
 env:
   BUILD_REPOSITORY: "diverger/armbian-build"
-  BUILD_REF: "${{ (((github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_commit) || github.event.inputs.branch)) || 'armbian' }}"
+  BUILD_REF: "${{ (((github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ref) || github.event.inputs.branch)) || 'armbian' }}"
   USERPATCHES_REPOSITORY: "armbian/os"
   USERPATCHES_REF: "main"
   USERPATCHES_DIR: "userpatches"
@@ -95,7 +95,7 @@ env:
 
   RELEASE_TAG: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) || '' }}
   RELEASE_ID: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_id) || '' }}
-  CUSTOM_COMMIT: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.custom_commit) || '' }}
+  CUSTOM_REF: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.custom_ref) || 'main' }}
 
   NIGHTLY_BUILD: >
     ${{
@@ -196,6 +196,7 @@ jobs:
         with:
           repository: diverger/armbian-custom
           token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
           fetch-depth: 0
           clean: false
           path: custom
@@ -1224,7 +1225,7 @@ jobs:
   publish-debs-to-repo:
     name: "Download artifacts from ORAS cache"
     runs-on: ubuntu-latest
-    if: ${{ !failure() && !cancelled() && github.event.inputs.targets_filter_incs == '' && github.event.inputs.armbian_commit == '' }} # eg: run if dependencies worked. See https://github.com/orgs/community/discussions/45058#discussioncomment-4817378
+    if: ${{ !failure() && !cancelled() && github.event.inputs.targets_filter_incs == '' && github.event.inputs.armbian_ref == '' }} # eg: run if dependencies worked. See https://github.com/orgs/community/discussions/45058#discussioncomment-4817378
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     steps:
 
@@ -1347,8 +1348,8 @@ jobs:
     if: >
       ${{
         !failure() && !cancelled() &&
-        ((github.event_name == 'workflow_dispatch' && github.event.inputs.armbian_commit == '' && github.event.inputs.nightly == 'yes') ||
-        (github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_commit == '' && github.event.client_payload.nightly == 'yes'))}}
+        ((github.event_name == 'workflow_dispatch' && github.event.inputs.armbian_ref == '' && github.event.inputs.nightly == 'yes') ||
+        (github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ref == '' && github.event.client_payload.nightly == 'yes'))}}
 
     needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
     steps:
