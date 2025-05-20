@@ -134,7 +134,7 @@ jobs:
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
         with:
-          name: assets-for-download-stable
+          name: assets-for-download-${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}
           path: downloads
           retention-days: 5
 
@@ -1292,6 +1292,11 @@ jobs:
 
     needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
     steps:
+
+      - uses: geekyeggo/delete-artifact@v5
+        with:
+          name: assets-for-download-${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}
+          failOnError: false
 
       # For now, we won't build image files for nightly builds
       # Cleaning logs
