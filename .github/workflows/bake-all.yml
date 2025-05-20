@@ -79,15 +79,9 @@ on:
         required: false
         default: ''
 
-      armbian_commit:
-        type: string
-        description: 'Commit id used to build given commit, for test purposes?'
-        required: false
-        default: ''
-
 env:
   BUILD_REPOSITORY: "diverger/armbian-build"
-  BUILD_REF: "${{ (github.event.inputs && (github.event.inputs.armbian_commit || github.event.inputs.branch)) || 'armbian' }}"
+  BUILD_REF: "${{ (github.event.inputs && ((github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_commit) || github.event.inputs.branch)) || 'armbian' }}"
   USERPATCHES_REPOSITORY: "armbian/os"
   USERPATCHES_REF: "main"
   USERPATCHES_DIR: "userpatches"
@@ -101,6 +95,8 @@ env:
 
   RELEASE_TAG: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) || '' }}
   RELEASE_ID: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_id) || '' }}
+  CUSTOM_COMMIT: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_id) || '' }}
+
   NIGHTLY_BUILD: >
     ${{
       (github.event_name == 'repository_dispatch' && github.event.client_payload.nightly) ||
