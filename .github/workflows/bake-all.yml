@@ -1354,7 +1354,7 @@ jobs:
       #     file: "release.txt;oss-urls/image-urls.txt"
       #     verbose: true
 
-      - name: Publish to Github releases
+      - name: Publish to GitHub release
         id: create_release
         uses: ncipollo/release-action@v1
         with:
