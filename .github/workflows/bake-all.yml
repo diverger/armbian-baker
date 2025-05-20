@@ -1189,7 +1189,9 @@ jobs:
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            "./output/images/**:/\
+            armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/\
+            ${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/"
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
