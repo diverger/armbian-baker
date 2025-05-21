@@ -12,7 +12,7 @@ run-name: >
 on:
 
   repository_dispatch:
-    types: [trigger-bake-all]
+    types: [event-bake-all]
 
   workflow_dispatch:
     inputs:
