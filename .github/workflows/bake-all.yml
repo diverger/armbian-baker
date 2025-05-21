@@ -109,7 +109,7 @@ env:
   NIGHTLY_BUILD: >
     ${{
       (github.event_name == 'repository_dispatch' && github.event.client_payload.nightly) ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.nightly)
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.nightly) || ''
     }}
 
 concurrency:
