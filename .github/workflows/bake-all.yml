@@ -127,7 +127,7 @@ jobs:
       - name: Get Armbian version
         run: |
           mkdir -p downloads
-          
+
           _EFFECTIVE_ARMBIAN_VERSION=""
           if [ -z "$ARMBIAN_VERSION" ]; then
             echo "Workflow ARMBIAN_VERSION env is empty. Reading from stable.json."
@@ -258,7 +258,8 @@ jobs:
           # fi
 
           cd build
-          bash ./compile.sh gha-matrix armbian-images \
+          bash ./compile.sh GIT_TOKEN=${{ env.GH_TOKEN }} \
+            gha-matrix armbian-images \
             REVISION="${{ needs.version_prep.outputs.version }}" \
             BETA=no \
             CLEAN_INFO=yes \
