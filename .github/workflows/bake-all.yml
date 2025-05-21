@@ -260,8 +260,8 @@ jobs:
           # fi
 
           cd build
-          bash ./compile.sh GIT_TOKEN=${{ env.GH_TOKEN }} \
-            gha-matrix armbian-images \
+          bash ./compile.sh gha-matrix armbian-images \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
             REVISION="${{ needs.version_prep.outputs.version }}" \
             BETA=no \
             CLEAN_INFO=yes \
