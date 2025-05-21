@@ -405,7 +405,7 @@ jobs:
         run: |
           bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
-      - name: Set package visibility to private
+      - name: Set package visibility
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGE_OWNER: ${{ github.repository_owner }} # Org or user owning the package
@@ -501,7 +501,7 @@ jobs:
         run: |
           bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
-      - name: Set package visibility to private
+      - name: Set package visibility
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGE_OWNER: ${{ github.repository_owner }} # Org or user owning the package
@@ -597,7 +597,7 @@ jobs:
         run: |
           bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
-      - name: Set package visibility to private
+      - name: Set package visibility
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGE_OWNER: ${{ github.repository_owner }} # Org or user owning the package
@@ -688,12 +688,12 @@ jobs:
           platforms: all
 
       - name: Build  ${{matrix.desc}}
-        timeout-minutes: 60
+        timeout-minutes: 180
         id: build
         run: |
           bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
-      - name: Set package visibility to private
+      - name: Set package visibility
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGE_OWNER: ${{ github.repository_owner }} # Org or user owning the package
