@@ -413,7 +413,7 @@ jobs:
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
           rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo
+          rm -rf userpatches.repo && rm -rf custom
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -498,7 +498,7 @@ jobs:
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
           rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo
+          rm -rf userpatches.repo && rm -rf custom
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -583,7 +583,7 @@ jobs:
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
           rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo
+          rm -rf userpatches.repo && rm -rf custom
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -668,7 +668,7 @@ jobs:
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
           rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo
+          rm -rf userpatches.repo && rm -rf custom
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -710,7 +710,7 @@ jobs:
       # cleanup the place where we will clone the userpatches repo, to avoid git going insane and cleaning everything later
       - name: Cleanup userpatches repo
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo
+        run: rm -rf userpatches.repo && rm -rf custom
 
       - name: Checkout build repo
         uses: actions/checkout@v4
@@ -732,12 +732,24 @@ jobs:
           clean: false # true is default.
           path: userpatches.repo
 
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
       - name: "Put userpatches in place, and remove userpatches repo"
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rm -rf userpatches.repo
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
 
       - name: "Cleanup leftover output"
         run: |
@@ -846,7 +858,7 @@ jobs:
 
       - name: Cleanup userpatches repo
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo
+        run: rm -rf userpatches.repo && rm -rf custom
 
       - name: Checkout build repo
         uses: actions/checkout@v4
@@ -867,12 +879,24 @@ jobs:
           clean: false
           path: userpatches.repo
 
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
       - name: "Put userpatches in place, and remove userpatches repo"
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rm -rf userpatches.repo
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
 
       - name: "Cleanup leftover output"
         run: |
@@ -979,7 +1003,7 @@ jobs:
 
       - name: Cleanup userpatches repo
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo
+        run: rm -rf userpatches.repo && rm -rf custom
 
       - name: Checkout build repo
         uses: actions/checkout@v4
@@ -1000,12 +1024,24 @@ jobs:
           clean: false
           path: userpatches.repo
 
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
       - name: "Put userpatches in place, and remove userpatches repo"
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rm -rf userpatches.repo
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
 
       - name: "Cleanup leftover output"
         run: |
@@ -1112,7 +1148,7 @@ jobs:
 
       - name: Cleanup userpatches repo
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo
+        run: rm -rf userpatches.repo && rm -rf custom
 
       - name: Checkout build repo
         uses: actions/checkout@v4
@@ -1133,12 +1169,24 @@ jobs:
           clean: false
           path: userpatches.repo
 
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
       - name: "Put userpatches in place, and remove userpatches repo"
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rm -rf userpatches.repo
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
 
       - name: "Cleanup leftover output"
         run: |
