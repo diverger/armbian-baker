@@ -127,9 +127,7 @@ jobs:
       - name: Get Armbian version
         run: |
           mkdir -p downloads
-
-          echo "Armbian version: $ARMBIAN_VERSION"
-
+          
           _EFFECTIVE_ARMBIAN_VERSION=""
           if [ -z "$ARMBIAN_VERSION" ]; then
             echo "Workflow ARMBIAN_VERSION env is empty. Reading from stable.json."
