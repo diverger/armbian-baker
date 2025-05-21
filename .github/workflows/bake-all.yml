@@ -135,13 +135,11 @@ jobs:
       - name: Get Armbian version
         run: |
           mkdir -p downloads
-          # $ARMBIAN_VERSION here is from the workflow's 'env' context.
-          # It's set if inputs.armbian_version or client_payload.armbian_version was provided.
 
           _EFFECTIVE_ARMBIAN_VERSION=""
           if [ -z "$ARMBIAN_VERSION" ]; then
             echo "Workflow ARMBIAN_VERSION env is empty. Reading from stable.json."
-            _EFFECTIVE_ARMBIAN_VERSION=$(cat "stable.json" | jq -r '.version')
+            _EFFECTIVE_ARMBIAN_VERSION=$(jq -r '.version' stable.json)
           else
             echo "Using ARMBIAN_VERSION from workflow env: $ARMBIAN_VERSION"
             _EFFECTIVE_ARMBIAN_VERSION="$ARMBIAN_VERSION"
