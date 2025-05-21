@@ -95,8 +95,13 @@ env:
   EXTRA_PARAMS_ALL_BUILDS: "${{ inputs.extra_params || 'UPLOAD_TO_OCI_ONLY=yes' }}"
 
   ARMBIAN_VERSION: >
-    ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.armbian_version ||
-    github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_version || '' }}
+    ${{
+      (
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.armbian_version) ||
+        (github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_version)
+      ) ||
+      ''
+    }}
 
   GH_TOKEN: "${{ secrets.GH_ACCESS_TOKEN }}"
   EXTRA_PARAMS_IMAGE: "SHARE_LOG=no "
