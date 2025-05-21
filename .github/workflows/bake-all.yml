@@ -374,7 +374,7 @@ jobs:
       # cleanup the place where we will clone the userpatches repo, to avoid git going insane and cleaning everything later
       - name: Cleanup userpatches repo
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo
+        run: rm -rf userpatches.repo && rm -rf custom
 
       - name: Checkout build repo
         uses: actions/checkout@v4 # We don't need to clone git, really. A wget would suffice for GH-hosted runners. But using clone is better for Igor-hosted runners.
@@ -412,7 +412,7 @@ jobs:
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. build/userpatches/
+          rsync -av custom/userpatches/. userpatches/
           rm -rf userpatches.repo
 
       - name: Set up QEMU
@@ -460,7 +460,7 @@ jobs:
 
       - name: Cleanup userpatches repo
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo
+        run: rm -rf userpatches.repo && rm -rf custom
 
       - name: Checkout build repo
         uses: actions/checkout@v4
@@ -497,7 +497,7 @@ jobs:
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. build/userpatches/
+          rsync -av custom/userpatches/. userpatches/
           rm -rf userpatches.repo
 
       - name: Set up QEMU
@@ -545,7 +545,7 @@ jobs:
 
       - name: Cleanup userpatches repo
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo
+        run: rm -rf userpatches.repo && rm -rf custom
 
       - name: Checkout build repo
         uses: actions/checkout@v4
@@ -582,7 +582,7 @@ jobs:
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. build/userpatches/
+          rsync -av custom/userpatches/. userpatches/
           rm -rf userpatches.repo
 
       - name: Set up QEMU
@@ -630,7 +630,7 @@ jobs:
 
       - name: Cleanup userpatches repo
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo
+        run: rm -rf userpatches.repo && rm -rf custom
 
       - name: Checkout build repo
         uses: actions/checkout@v4
@@ -667,7 +667,7 @@ jobs:
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. build/userpatches/
+          rsync -av custom/userpatches/. userpatches/
           rm -rf userpatches.repo
 
       - name: Set up QEMU
