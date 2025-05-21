@@ -82,9 +82,7 @@ on:
 env:
   BUILD_REPOSITORY: "diverger/armbian-build"
 
-  BUILD_REF: >
-    ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ref ||
-    github.event.inputs.branch || 'armbian' }}
+  BUILD_REF: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ref || github.event.inputs.branch || 'armbian' }}
 
   USERPATCHES_REPOSITORY: "armbian/os"
   USERPATCHES_REF: "main"
