@@ -99,6 +99,7 @@ env:
 
   RELEASE_TAG: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) || '' }}
   RELEASE_ID: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_id) || '' }}
+  CUSTOM_REP: "diverger/armbian-custom"
   CUSTOM_REF: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.custom_ref) || 'main' }}
   TARGETS_FILE: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.targets_file) || 'targets-diverger-stable.yml' }}
 
@@ -209,9 +210,10 @@ jobs:
           cd ..
 
       - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
         uses: actions/checkout@v4
         with:
-          repository: diverger/armbian-custom
+          repository: ${{ env.CUSTOM_REP }}
           token: ${{ env.GH_TOKEN }}
           ref: ${{ env.CUSTOM_REF }}
           fetch-depth: 0
@@ -394,11 +396,23 @@ jobs:
           clean: false # true is default.
           path: userpatches.repo
 
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
       - name: "Put userpatches in place, and remove userpatches repo"
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. build/userpatches/
           rm -rf userpatches.repo
 
       - name: Set up QEMU
@@ -467,11 +481,23 @@ jobs:
           clean: false
           path: userpatches.repo
 
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
       - name: "Put userpatches in place, and remove userpatches repo"
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. build/userpatches/
           rm -rf userpatches.repo
 
       - name: Set up QEMU
@@ -540,11 +566,23 @@ jobs:
           clean: false
           path: userpatches.repo
 
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
       - name: "Put userpatches in place, and remove userpatches repo"
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. build/userpatches/
           rm -rf userpatches.repo
 
       - name: Set up QEMU
@@ -613,11 +651,23 @@ jobs:
           clean: false
           path: userpatches.repo
 
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
       - name: "Put userpatches in place, and remove userpatches repo"
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         run: |
           mkdir -pv userpatches
           rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. build/userpatches/
           rm -rf userpatches.repo
 
       - name: Set up QEMU
