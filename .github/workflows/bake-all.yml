@@ -96,7 +96,7 @@ env:
 
   ARMBIAN_VERSION: >
     ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.armbian_version ||
-    github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_verison }}
+    github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_version }}
 
   GH_TOKEN: "${{ secrets.GH_ACCESS_TOKEN }}"
   EXTRA_PARAMS_IMAGE: "SHARE_LOG=no "
@@ -132,12 +132,28 @@ jobs:
           fetch-depth: 0
           clean: false # true is default
 
-      - name: Read stable version
+      - name: Get Armbian version
         run: |
           mkdir -p downloads
-          cat "stable.json" | jq '.version' | sed "s/\"//g" | sed 's/^/ARMBIAN_VERSION=/' >> $GITHUB_ENV
-          [[ "${{ github.event.inputs.armbian_version }}" != '' ]] && echo "ARMBIAN_VERSION=${{ github.event.inputs.armbian_version }}" >> $GITHUB_ENV
-          echo "$ARMBIAN_VERSION" > downloads/version
+          # $ARMBIAN_VERSION here is from the workflow's 'env' context.
+          # It's set if inputs.armbian_version or client_payload.armbian_version was provided.
+
+          _EFFECTIVE_ARMBIAN_VERSION=""
+          if [ -z "$ARMBIAN_VERSION" ]; then
+            echo "Workflow ARMBIAN_VERSION env is empty. Reading from stable.json."
+            _EFFECTIVE_ARMBIAN_VERSION=$(cat "stable.json" | jq -r '.version')
+          else
+            echo "Using ARMBIAN_VERSION from workflow env: $ARMBIAN_VERSION"
+            _EFFECTIVE_ARMBIAN_VERSION="$ARMBIAN_VERSION"
+          fi
+
+          echo "Final ARMBIAN_VERSION determined: $_EFFECTIVE_ARMBIAN_VERSION"
+
+          # Set it for subsequent steps in this job and for job outputs (via ${{ env.ARMBIAN_VERSION }})
+          echo "ARMBIAN_VERSION=$_EFFECTIVE_ARMBIAN_VERSION" >> $GITHUB_ENV
+
+          # Create the version artifact
+          echo "$_EFFECTIVE_ARMBIAN_VERSION" > downloads/version
 
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
@@ -405,29 +421,6 @@ jobs:
         run: |
           bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
-      - name: Set package visibility
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGE_OWNER: ${{ github.repository_owner }} # Org or user owning the package
-          # PACKAGE_NAME: "os/*.deb"
-          # ACKAGE_TYPE: "deb"
-        run: |
-          if ! command -v "gh" > /dev/null 2>&1; then
-             sudo apt-get -y -qq install gh
-          fi
-
-          echo "Fetching list of deb packages for owner ${PACKAGE_OWNER}"
-          # Adjust the jq filter as needed to correctly parse package names
-          # This assumes `gh package list` can be filtered or its output parsed effectively.
-          # The exact command to list and filter might need refinement.
-          gh package list --owner "${PACKAGE_OWNER}" --package-type deb --json name --jq '.[] | .name' | while read -r pkg_name; do
-            # Add a condition here if you need to filter by a pattern, e.g., using grep
-            # if echo "$pkg_name" | grep -q "your-pattern"; then
-            echo "Setting visibility for package: $pkg_name"
-            gh package update "$pkg_name" --visibility private
-            # fi
-          done
-
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
         run: |
@@ -500,29 +493,6 @@ jobs:
         id: build
         run: |
           bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
-
-      - name: Set package visibility
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGE_OWNER: ${{ github.repository_owner }} # Org or user owning the package
-          # PACKAGE_NAME: "os/*.deb"
-          # ACKAGE_TYPE: "deb"
-        run: |
-          if ! command -v "gh" > /dev/null 2>&1; then
-             sudo apt-get -y -qq install gh
-          fi
-
-          echo "Fetching list of deb packages for owner ${PACKAGE_OWNER}"
-          # Adjust the jq filter as needed to correctly parse package names
-          # This assumes `gh package list` can be filtered or its output parsed effectively.
-          # The exact command to list and filter might need refinement.
-          gh package list --owner "${PACKAGE_OWNER}" --package-type deb --json name --jq '.[] | .name' | while read -r pkg_name; do
-            # Add a condition here if you need to filter by a pattern, e.g., using grep
-            # if echo "$pkg_name" | grep -q "your-pattern"; then
-            echo "Setting visibility for package: $pkg_name"
-            gh package update "$pkg_name" --visibility private
-            # fi
-          done
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -597,29 +567,6 @@ jobs:
         run: |
           bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
-      - name: Set package visibility
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGE_OWNER: ${{ github.repository_owner }} # Org or user owning the package
-          # PACKAGE_NAME: "os/*.deb"
-          # ACKAGE_TYPE: "deb"
-        run: |
-          if ! command -v "gh" > /dev/null 2>&1; then
-             sudo apt-get -y -qq install gh
-          fi
-
-          echo "Fetching list of deb packages for owner ${PACKAGE_OWNER}"
-          # Adjust the jq filter as needed to correctly parse package names
-          # This assumes `gh package list` can be filtered or its output parsed effectively.
-          # The exact command to list and filter might need refinement.
-          gh package list --owner "${PACKAGE_OWNER}" --package-type deb --json name --jq '.[] | .name' | while read -r pkg_name; do
-            # Add a condition here if you need to filter by a pattern, e.g., using grep
-            # if echo "$pkg_name" | grep -q "your-pattern"; then
-            echo "Setting visibility for package: $pkg_name"
-            gh package update "$pkg_name" --visibility private
-            # fi
-          done
-
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
         run: |
@@ -692,29 +639,6 @@ jobs:
         id: build
         run: |
           bash ./compile.sh ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
-
-      - name: Set package visibility
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGE_OWNER: ${{ github.repository_owner }} # Org or user owning the package
-          # PACKAGE_NAME: "os/*.deb"
-          # ACKAGE_TYPE: "deb"
-        run: |
-          if ! command -v "gh" > /dev/null 2>&1; then
-             sudo apt-get -y -qq install gh
-          fi
-
-          echo "Fetching list of deb packages for owner ${PACKAGE_OWNER}"
-          # Adjust the jq filter as needed to correctly parse package names
-          # This assumes `gh package list` can be filtered or its output parsed effectively.
-          # The exact command to list and filter might need refinement.
-          gh package list --owner "${PACKAGE_OWNER}" --package-type deb --json name --jq '.[] | .name' | while read -r pkg_name; do
-            # Add a condition here if you need to filter by a pattern, e.g., using grep
-            # if echo "$pkg_name" | grep -q "your-pattern"; then
-            echo "Setting visibility for package: $pkg_name"
-            gh package update "$pkg_name" --visibility private
-            # fi
-          done
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
