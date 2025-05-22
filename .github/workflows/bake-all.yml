@@ -87,10 +87,11 @@ env:
   USERPATCHES_REPOSITORY: "armbian/os"
   USERPATCHES_REF: "main"
   USERPATCHES_DIR: "userpatches"
+  
   # only used for nightly builds, and for 'community' and 'distribution' releases
   RELEASE_REPOSITORY: "armbian-baker"
   DOCKER_SKIP_UPDATE: "yes"
-  EXTRA_PARAMS_ALL_BUILDS: "${{ inputs.extra_params || 'UPLOAD_TO_OCI_ONLY=yes' }}"
+  EXTRA_PARAMS_ALL_BUILDS: "${{ github.event.client_payload.extra_params || inputs.extra_params || 'UPLOAD_TO_OCI_ONLY=yes' }}"
 
   ARMBIAN_VERSION: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.armbian_version) || (github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_version) || '' }}
 
@@ -260,8 +261,8 @@ jobs:
           # fi
 
           cd build
-          bash ./compile.sh gha-matrix armbian-images \
-            GIT_TOKEN="${{ env.GH_TOKEN }}" \
+          bash ./compile.sh GIT_TOKEN="${{ env.GH_TOKEN }}" \
+            gha-matrix armbian-images \
             REVISION="${{ needs.version_prep.outputs.version }}" \
             BETA=${{ env.NIGHTLY_BUILD }} \
             CLEAN_INFO=yes \
