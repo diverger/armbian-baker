@@ -262,10 +262,9 @@ jobs:
 
           cd build
 
-          GIT_TOKEN=${{ secrets.GH_ACCESS_TOKEN }} 
-
           bash ./compile.sh \
             gha-matrix armbian-images \
+            GIT_TOKEN=${{ secrets.GH_ACCESS_TOKEN }} \
             REVISION="${{ needs.version_prep.outputs.version }}" \
             BETA=${{ env.NIGHTLY_BUILD }} \
             CLEAN_INFO=yes \
