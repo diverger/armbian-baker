@@ -94,7 +94,7 @@ jobs:
       #   uses: actions/checkout@v4
       #   with:
       #     repository: diverger/armbian-board
-      #     token: ${{ secrets.REPO_ACCESS_TOKEN }}
+      #     token: ${{ secrets.GH_ACCESS_TOKEN }}
       #     ref: master
       #     clean: false
 
@@ -105,7 +105,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPO_OWNER }}/${{ env.BUILD_REPO_NAME }}
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
           path: ${{ env.LOCAL_BUILD_ACTION_PATH }}
           ref: ${{ env.BUILD_REPO_BRANCH }}
           sparse-checkout: action.yml
@@ -131,7 +131,7 @@ jobs:
           armbian_ui: ${{ inputs.armbian_ui }}
           armbian_version: ${{ inputs.armbian_version }}
           armbian_board: ${{ inputs.armbian_board }}
-          armbian_token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          armbian_token: ${{ secrets.GH_ACCESS_TOKEN }}
           armbian_pgp_key: ${{ secrets.GPG_KEY }}
           armbian_pgp_password: ${{ secrets.GPG_KEY_PASSPHRASE }}
           release_tag: ${{ inputs.release_tag }}
