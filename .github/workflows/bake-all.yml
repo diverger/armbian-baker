@@ -102,7 +102,7 @@ env:
   CUSTOM_REP: "diverger/armbian-custom"
   CUSTOM_REF: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.custom_ref) || 'main' }}
   TARGETS_FILE: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.targets_file) || 'targets-diverger-stable.yml' }}
-  NIGHTLY_BUILD: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.nightly) || (github.event_name == 'workflow_dispatch' && github.event.inputs.nightly) }}
+  NIGHTLY_BUILD: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.nightly) || (github.event_name == 'workflow_dispatch' && github.event.inputs.nightly) || 'yes' }}
   CHECK_OCI: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.check_oci) || (github.event_name == 'workflow_dispatch' && github.event.inputs.check_oci) || 'no' }}
 
 concurrency:
@@ -263,7 +263,7 @@ jobs:
           ./compile.sh gha-matrix armbian-images \
             GIT_TOKEN="${{ env.GH_TOKEN }}" \
             REVISION="${{ needs.version_prep.outputs.version }}" \
-            BETA=no \
+            BETA=${{ env.NIGHTLY_BUILD }} \
             CLEAN_INFO=yes \
             CLEAN_MATRIX=yes \
             MATRIX_ARTIFACT_CHUNKS=4 \
