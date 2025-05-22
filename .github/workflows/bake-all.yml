@@ -87,7 +87,7 @@ env:
   USERPATCHES_REPOSITORY: "armbian/os"
   USERPATCHES_REF: "main"
   USERPATCHES_DIR: "userpatches"
-  
+
   # only used for nightly builds, and for 'community' and 'distribution' releases
   RELEASE_REPOSITORY: "armbian-baker"
   DOCKER_SKIP_UPDATE: "yes"
@@ -261,7 +261,7 @@ jobs:
           # fi
 
           cd build
-          bash ./compile.sh GIT_TOKEN="${{ env.GH_TOKEN }}" \
+          bash ./compile.sh GIT_TOKEN=${{ secrets.GH_ACCESS_TOKEN }} \
             gha-matrix armbian-images \
             REVISION="${{ needs.version_prep.outputs.version }}" \
             BETA=${{ env.NIGHTLY_BUILD }} \
@@ -426,7 +426,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
-            GIT_TOKEN="${{ env.GH_TOKEN }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
@@ -513,7 +513,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
-            GIT_TOKEN="${{ env.GH_TOKEN }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
@@ -600,7 +600,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
-            GIT_TOKEN="${{ env.GH_TOKEN }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
@@ -687,7 +687,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
-            GIT_TOKEN="${{ env.GH_TOKEN }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
@@ -778,7 +778,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
-            GIT_TOKEN="${{ env.GH_TOKEN }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
@@ -926,7 +926,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
-            GIT_TOKEN="${{ env.GH_TOKEN }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
@@ -1073,7 +1073,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
-            GIT_TOKEN="${{ env.GH_TOKEN }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
@@ -1220,7 +1220,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
-            GIT_TOKEN="${{ env.GH_TOKEN }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
