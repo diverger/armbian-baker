@@ -122,6 +122,11 @@ jobs:
       #       ${{ secrets.GIT_SSH_PRIVATE_KEY_UBOOT }}
       #       ${{ secrets.GIT_SSH_PRIVATE_KEY_KERNEL }}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
       - name: Build local
         uses: ./
         with:
