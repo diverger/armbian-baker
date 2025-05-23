@@ -451,7 +451,25 @@ jobs:
     name: "17 artifacts chunks ready"
     runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     if: ${{ !cancelled() && ( 1 == 2 ) }} # eg: never run.
-    needs: [ "matrix_prep", "build-artifacts-chunk-1","build-artifacts-chunk-2","build-artifacts-chunk-3","build-artifacts-chunk-4","build-artifacts-chunk-5","build-artifacts-chunk-6","build-artifacts-chunk-7","build-artifacts-chunk-8","build-artifacts-chunk-9","build-artifacts-chunk-10","build-artifacts-chunk-11","build-artifacts-chunk-12","build-artifacts-chunk-13","build-artifacts-chunk-14","build-artifacts-chunk-15","build-artifacts-chunk-16","build-artifacts-chunk-17"] # <-- HERE: all artifact chunk numbers.
+    needs:
+      - "matrix_prep"
+      - "build-artifacts-chunk-1"
+      - "build-artifacts-chunk-2"
+      - "build-artifacts-chunk-3"
+      - "build-artifacts-chunk-4"
+      - "build-artifacts-chunk-5"
+      - "build-artifacts-chunk-6"
+      - "build-artifacts-chunk-7"
+      - "build-artifacts-chunk-8"
+      - "build-artifacts-chunk-9"
+      - "build-artifacts-chunk-10"
+      - "build-artifacts-chunk-11"
+      - "build-artifacts-chunk-12"
+      - "build-artifacts-chunk-13"
+      - "build-artifacts-chunk-14"
+      - "build-artifacts-chunk-15"
+      - "build-artifacts-chunk-16"
+      - "build-artifacts-chunk-17" # <-- HERE: all artifact chunk numbers.
     steps:
       - name: fake step
         run: uptime
@@ -460,7 +478,24 @@ jobs:
     name: "16 image chunks ready"
     runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     if: ${{ !cancelled() && ( 1 == 2 ) }} # eg: never run.
-    needs: [ "matrix_prep", "build-images-chunk-1","build-images-chunk-2","build-images-chunk-3","build-images-chunk-4","build-images-chunk-5","build-images-chunk-6","build-images-chunk-7","build-images-chunk-8","build-images-chunk-9","build-images-chunk-10","build-images-chunk-11","build-images-chunk-12","build-images-chunk-13","build-images-chunk-14","build-images-chunk-15","build-images-chunk-16" ] # <-- HERE: all image chunk numbers.
+    needs:
+      - "matrix_prep"
+      - "build-images-chunk-1"
+      - "build-images-chunk-2"
+      - "build-images-chunk-3"
+      - "build-images-chunk-4"
+      - "build-images-chunk-5"
+      - "build-images-chunk-6"
+      - "build-images-chunk-7"
+      - "build-images-chunk-8"
+      - "build-images-chunk-9"
+      - "build-images-chunk-10"
+      - "build-images-chunk-11"
+      - "build-images-chunk-12"
+      - "build-images-chunk-13"
+      - "build-images-chunk-14"
+      - "build-images-chunk-15"
+      - "build-images-chunk-16" # <-- HERE: all image chunk numbers.
     steps:
       - name: fake step
         run: uptime
@@ -469,7 +504,10 @@ jobs:
     name: "17 artifacts and 16 image chunks ready"
     runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     if: ${{ !cancelled() && ( 1 == 2 ) }} # eg: never run.
-    needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
+    needs:
+      - "matrix_prep"
+      - "all-artifacts-ready"
+      - "all-images-ready"
     steps:
       - name: fake step
         run: uptime
