@@ -115,7 +115,8 @@ jobs:
   version_prep:
     name: "Determine version"
     if: ${{ github.repository_owner == 'diverger' && github.actor == 'diverger' }}
-    runs-on: ubuntu-latest
+    runs-on: github-arm64-ubuntu-24.04
+    # runs-on: ubuntu-latest
     steps:
       - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
         uses: actions/checkout@v4
