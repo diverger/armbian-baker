@@ -35,7 +35,8 @@ on:
         required: false
         options:
           - 'ubuntu-latest'
-          - 'github-arm64-ubuntu-24.04'
+          - 'github-linux64-ubuntu-latest'
+          - 'github-arm64-ubuntu-24.04-8core'
         type: choice
         default: 'ubuntu-latest'
 
@@ -118,7 +119,7 @@ env:
   CHECK_OCI: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.check_oci) || (github.event_name == 'workflow_dispatch' && github.event.inputs.check_oci) || 'no' }}
 
 concurrency:
-  group: diverger-standard-support
+  group: diverger-bake
   cancel-in-progress: false
 
 jobs:
