@@ -96,6 +96,8 @@ env:
   ARMBIAN_VERSION: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.armbian_version) || (github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_version) || '' }}
 
   GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+  GHCR_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+
   EXTRA_PARAMS_IMAGE: "SHARE_LOG=no "
 
   RELEASE_TAG: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) || '' }}
@@ -245,7 +247,7 @@ jobs:
         with:
           registry: ghcr.io
           username: "${{ github.actor }}" # GitHub username or org
-          password: ${{ secrets.GITHUB_TOKEN }}  # GitHub actions builtin token. repo has to have pkg access.
+          password: ${{ env.GHCR_TOKEN }}  # GitHub actions builtin token. repo has to have pkg access.
 
       - name: Prepare Info JSON and Matrices
         id: prepare-matrix
@@ -373,7 +375,7 @@ jobs:
         with:
           registry: ghcr.io
           username: "${{ github.actor }}" # GitHub username or org
-          password: "${{ secrets.GITHUB_TOKEN }}"    # GitHub actions builtin token. repo has to have pkg access.
+          password: "${{ env.GHCR_TOKEN }}"    # GitHub actions builtin token. repo has to have pkg access.
 
       # cleanup the place where we will clone the userpatches repo, to avoid git going insane and cleaning everything later
       - name: Cleanup userpatches repo
@@ -462,7 +464,7 @@ jobs:
         with:
           registry: ghcr.io
           username: "${{ github.actor }}"
-          password: "${{ secrets.GITHUB_TOKEN }}"
+          password: "${{ env.GHCR_TOKEN }}"
 
       - name: Cleanup userpatches repo
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
@@ -549,7 +551,7 @@ jobs:
         with:
           registry: ghcr.io
           username: "${{ github.actor }}"
-          password: "${{ secrets.GITHUB_TOKEN }}"
+          password: "${{ env.GHCR_TOKEN }}"
 
       - name: Cleanup userpatches repo
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
@@ -636,7 +638,7 @@ jobs:
         with:
           registry: ghcr.io
           username: "${{ github.actor }}"
-          password: "${{ secrets.GITHUB_TOKEN }}"
+          password: "${{ env.GHCR_TOKEN }}"
 
       - name: Cleanup userpatches repo
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
@@ -1318,7 +1320,7 @@ jobs:
         with:
           registry: ghcr.io
           username: "${{ github.actor }}" # GitHub username or org
-          password: "${{ secrets.GITHUB_TOKEN }}"    # GitHub actions builtin token. repo has to have pkg access.
+          password: "${{ env.GHCR_TOKEN }}"    # GitHub actions builtin token. repo has to have pkg access.
 
       # cleanup the place where we will clone the userpatches repo, to avoid git going insane and cleaning everything later
       - name: Cleanup userpatches repo
