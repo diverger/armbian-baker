@@ -30,6 +30,15 @@ on:
         type: choice
         default: 'no'
 
+      runner:
+        description: 'Runner for build'
+        required: false
+        options:
+          - 'github-arm64-ubuntu-24.04'
+          - 'ubuntu-latest'
+        type: choice
+        default: 'github-arm64-ubuntu-24.04'
+
       extra_params:
         description: 'Extra params for all builds/jobs (prepare/artifact/image) (eg: DEBUG=yes)'
         required: false
@@ -117,7 +126,7 @@ jobs:
   version_prep:
     name: "Determine version"
     if: ${{ github.repository_owner == 'chaosrift' && github.actor == 'diverger' }}
-    runs-on: github-arm64-ubuntu-24.04
+    runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     # runs-on: ubuntu-latest
     steps:
       - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
@@ -183,7 +192,7 @@ jobs:
     name: "JSON matrix: 4/4 :: 4 artifact chunks, 4 image chunks"
     if: ${{ github.repository.owner == 'chaosrift' }} && ${{ github.actor == 'diverger' }}
     needs: [ version_prep ]
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     steps:
 
       # clean runners, self-hosted, or GitHub's
@@ -323,7 +332,7 @@ jobs:
 
   all-artifacts-ready:
     name: "4 artifacts chunks ready"
-    runs-on: ubuntu-latest # not going to run, anyway, but is required.
+    runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     if: ${{ !cancelled() && ( 1 == 2 ) }} # eg: never run.
     needs: [ "matrix_prep", "build-artifacts-chunk-1","build-artifacts-chunk-2","build-artifacts-chunk-3","build-artifacts-chunk-4"] # <-- HERE: all artifact chunk numbers.
     steps:
@@ -332,7 +341,7 @@ jobs:
 
   all-images-ready:
     name: "4 image chunks ready"
-    runs-on: ubuntu-latest # not going to run, anyway, but is required.
+    runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     if: ${{ !cancelled() && ( 1 == 2 ) }} # eg: never run.
     needs: [ "matrix_prep", "build-images-chunk-1","build-images-chunk-2","build-images-chunk-3","build-images-chunk-4" ] # <-- HERE: all image chunk numbers.
     steps:
@@ -341,7 +350,7 @@ jobs:
 
   all-artifacts-and-images-ready:
     name: "4 artifacts and 4 image chunks ready"
-    runs-on: ubuntu-latest # not going to run, anyway, but is required.
+    runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     if: ${{ !cancelled() && ( 1 == 2 ) }} # eg: never run.
     needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
     steps:
@@ -812,7 +821,6 @@ jobs:
             fi
           done
 
-      # Download the artifacts (output/info) produced by the prepare-matrix job.
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -1298,7 +1306,7 @@ jobs:
 
   publish-debs-to-repo:
     name: "Download artifacts from ORAS cache"
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     # This will run in non-test mode
     if: ${{ !failure() && !cancelled() && github.event.client_payload.custom_ref == '' }}
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -1418,7 +1426,7 @@ jobs:
 
   closing:
     name: "Footer"
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     if: >
       ${{
         !failure() && !cancelled() &&
@@ -1444,7 +1452,7 @@ jobs:
 
   release:
     name: "Release"
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     if: ${{ !failure() && !cancelled() && (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) }}
     needs: [ "matrix_prep", "all-artifacts-ready", "all-images-ready" ]
     steps:
