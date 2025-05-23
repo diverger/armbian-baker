@@ -125,7 +125,7 @@ jobs:
 
   version_prep:
     name: "Determine version"
-    if: ${{ github.repository_owner == 'chaosrift' && github.actor == 'diverger' }}
+    if: ${{ github.actor == 'diverger' }}
     runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     # runs-on: ubuntu-latest
     steps:
@@ -513,7 +513,7 @@ jobs:
         run: uptime
 
   build-artifacts-chunk-1:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-1 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-1 == 'yes' }}
     needs: [ matrix_prep ]
 
     strategy:
@@ -604,7 +604,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-2:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-2 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-2 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -691,7 +691,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-3:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-3 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-3 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -778,7 +778,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-4:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-4 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-4 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -865,7 +865,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-5:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-5 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-5 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -952,7 +952,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-6:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-6 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-6 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1039,7 +1039,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-7:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-7 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-7 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1126,7 +1126,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-8:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-8 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-8 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1213,7 +1213,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-9:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-9 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-9 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1300,7 +1300,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-10:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-10 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-10 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1387,7 +1387,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-11:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-11 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-11 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1474,7 +1474,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-12:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-12 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-12 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1561,7 +1561,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-13:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-13 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-13 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1648,7 +1648,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-14:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-14 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-14 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1735,7 +1735,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-15:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-15 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-15 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1822,7 +1822,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-16:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-16 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-16 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1909,7 +1909,7 @@ jobs:
           echo "Logs: ${{ steps.build.outputs.logs_url }}"
 
   build-artifacts-chunk-17:
-    if: ${{ github.repository_owner == 'chaosrift' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-17 == 'yes' }}
+    if: ${{ github.actor == 'diverger' && needs.matrix_prep.outputs.artifacts-chunk-not-empty-17 == 'yes' }}
     needs: [ matrix_prep ]
     strategy:
       fail-fast: false
@@ -1998,7 +1998,7 @@ jobs:
   build-images-chunk-1:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-1 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-1 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-1) }}
@@ -2148,7 +2148,7 @@ jobs:
   build-images-chunk-2:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-2 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-2 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-2) }}
@@ -2295,7 +2295,7 @@ jobs:
   build-images-chunk-3:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-3 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-3 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-3) }}
@@ -2442,7 +2442,7 @@ jobs:
   build-images-chunk-4:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-4 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-4 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-4) }}
@@ -2589,7 +2589,7 @@ jobs:
   build-images-chunk-5:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-5 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-5 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-5) }}
@@ -2736,7 +2736,7 @@ jobs:
   build-images-chunk-6:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-6 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-6 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-6) }}
@@ -2883,7 +2883,7 @@ jobs:
   build-images-chunk-7:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-7 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-7 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-7) }}
@@ -3030,7 +3030,7 @@ jobs:
   build-images-chunk-8:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-8 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-8 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-8) }}
@@ -3177,7 +3177,7 @@ jobs:
   build-images-chunk-9:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-9 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-9 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-9) }}
@@ -3324,7 +3324,7 @@ jobs:
   build-images-chunk-10:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-10 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-10 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-10) }}
@@ -3471,7 +3471,7 @@ jobs:
   build-images-chunk-11:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-11 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-11 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-11) }}
@@ -3618,7 +3618,7 @@ jobs:
   build-images-chunk-12:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-12 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-12 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-12) }}
@@ -3765,7 +3765,7 @@ jobs:
   build-images-chunk-13:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-13 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-13 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-13) }}
@@ -3912,7 +3912,7 @@ jobs:
   build-images-chunk-14:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-14 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-14 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-14) }}
@@ -4059,7 +4059,7 @@ jobs:
   build-images-chunk-15:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-15 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-15 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-15) }}
@@ -4206,7 +4206,7 @@ jobs:
   build-images-chunk-16:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
-    if: ${{ !failure() && !cancelled() && ( github.repository_owner == 'chaosrift' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-16 == 'yes' ) }}
+    if: ${{ !failure() && !cancelled() && ( github.actor == 'diverger' ) && ( needs.matrix_prep.outputs.images-chunk-not-empty-16 == 'yes' ) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix_prep.outputs.images-chunk-json-16) }}
