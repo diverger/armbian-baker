@@ -191,7 +191,7 @@ jobs:
 
   matrix_prep:
     name: "JSON matrix: 17/16 :: 17 artifact chunks, 16 image chunks"
-    if: ${{ github.repository.owner == 'chaosrift' }} && ${{ github.actor == 'diverger' }}
+    if: ${{ github.actor == 'diverger' }}
     needs: [ version_prep ]
     runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     steps:
