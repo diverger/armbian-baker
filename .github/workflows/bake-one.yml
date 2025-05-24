@@ -6,7 +6,7 @@ on:
     inputs:
       armbian_target:
         type: choice
-        description: 'Build'
+        description: 'Build target type (kernel = build only kernel, build = build complete image with kernel and rootfs)'
         required: false
         options:
         - kernel
@@ -15,7 +15,7 @@ on:
 
       armbian_kernel_branch:
         type: choice
-        description: 'Kernel branch'
+        description: 'Kernel branch to use (vendor = manufacturer kernel, current = stable LTS kernel, edge = latest kernel)'
         options:
         - vendor
         - current
@@ -24,7 +24,7 @@ on:
 
       armbian_release:
         type: choice
-        description: 'Userspace'
+        description: 'Base OS distribution (Ubuntu: noble/jammy/mantic, Debian: bookworm/trixie/sid)'
         options:
         - noble
         - jammy
@@ -36,7 +36,7 @@ on:
 
       armbian_ui:
         type: choice
-        description: 'User interface (not all works)'
+        description: 'Desktop environment or UI type (minimal = CLI only, server = basic server setup, others = desktop environments)'
         options:
         - minimal
         - server
@@ -48,7 +48,7 @@ on:
         default: 'minimal'
 
       armbian_version:
-        description: 'Version'
+        description: 'Specific Armbian build framework version to use (leave empty to use default branch version)'
         required: false
         default: ''
 

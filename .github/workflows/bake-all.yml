@@ -17,77 +17,78 @@ on:
   workflow_dispatch:
     inputs:
       skip_images:
-        description: 'Skip building images? no = build images, yes = skip images'
+        description: 'Skip building images? (no = build both artifacts and images, yes = build only artifacts)'
         required: false
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
 
       check_oci:
-        description: 'Check OCI for existing artifacts? yes = check OCI, no = always build everything'
+        description: 'Check OCI registry for existing artifacts? (yes = skip if exists, no = always rebuild)'
         required: false
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
 
       runner:
-        description: 'Runner for build'
+        description: 'GitHub runner type for build jobs'
         required: false
         options:
-          - 'ubuntu-latest'
-          - 'github-linux64-ubuntu-latest'
-          - 'github-arm64-ubuntu-24.04-8core'
+          - 'ubuntu-latest'          # Standard GitHub-hosted runner
+          - 'github-linux64-ubuntu-latest-8core'  # Large GitHub-hosted runner
+          - 'github-arm64-ubuntu-24.04-8core'  # ARM64 self-hosted runner
         type: choice
         default: 'ubuntu-latest'
 
       extra_params:
-        description: 'Extra params for all builds/jobs (prepare/artifact/image) (eg: DEBUG=yes)'
+        description: 'Additional build parameters for all jobs (e.g., DEBUG=yes, CLEAN_LEVEL=make-kernel). These will be passed to prepare, artifact, and image build phases.'
         required: false
         default: ''
         type: string
 
       branch:
         type: choice
-        description: 'Framework build branch'
+        description: 'Armbian build framework branch to use'
         required: false
         options:
-        - armbian
-        - main
+        - armbian    # Main stable branch
+        - main       # Development branch
         default: 'armbian'
 
       board:
         type: choice
-        description: 'Board'
+        description: 'Target board (leave "all" to build all boards in targets file)'
         required: false
         options:
-        - orangepi5-plus
+        - orangepi5-plus    # Orange Pi 5 Plus board
         default: 'all'
 
       maintainer:
         type: choice
-        description: 'Maintainer'
+        description: 'Board maintainer filter (leave "all" for all maintainers)'
         required: false
         options:
-        - diverger
+        - diverger    # Your custom builds
         default: 'all'
 
       targets_filter_incs:
-        description: 'Optional filter for targets to include (e.g., board name). Leave empty for all.'
+        description: 'Comma-separated list of targets to include in the build (e.g., "orangepi5,rock5b" or "standard" for image types). Leave empty to build all available targets from the targets file.'
         required: false
         default: ''
         type: string
 
       nightly:
-        description: 'yes = nightly, no = stable'
+        description: 'Build type (yes = nightly/development build, no = stable release build)'
         required: false
         options: [ 'yes', 'no' ]
         type: choice
         default: 'no'
 
       armbian_version:
-        description: 'The version of Armbian build framework'
+        description: 'Specific Armbian build framework version to use (leave empty to use latest stable version from stable.json)'
         required: false
         default: ''
+        type: string
 
 env:
   BUILD_REPOSITORY: "diverger/armbian-build"
