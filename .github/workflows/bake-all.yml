@@ -91,8 +91,8 @@ on:
         type: string
 
 env:
+  
   BUILD_REPOSITORY: "diverger/armbian-build"
-
   BUILD_REF: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ref || github.event.inputs.branch || 'armbian' }}
 
   USERPATCHES_REPOSITORY: "armbian/os"
@@ -113,14 +113,18 @@ env:
 
   RELEASE_TAG: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) || '' }}
   RELEASE_ID: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_id) || '' }}
+
   CUSTOM_REP: "diverger/armbian-custom"
   CUSTOM_REF: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.custom_ref) || 'main' }}
+
   TARGETS_FILE: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.targets_file) || 'targets-diverger-stable.yml' }}
+
   NIGHTLY_BUILD: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.nightly) || (github.event_name == 'workflow_dispatch' && github.event.inputs.nightly) || 'yes' }}
+
   CHECK_OCI: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.check_oci) || (github.event_name == 'workflow_dispatch' && github.event.inputs.check_oci) || 'no' }}
 
 concurrency:
-  group: diverger-bake
+  group: ${{ (github.event.inputs.nightly == 'yes' || github.event.client_payload.nightly == 'yes') && format('{0}-nightly', github.workflow) || format('{0}-stable', github.workflow) }}
   cancel-in-progress: false
 
 jobs:
