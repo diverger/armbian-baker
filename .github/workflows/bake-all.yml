@@ -91,7 +91,7 @@ on:
         type: string
 
 env:
-  
+
   BUILD_REPOSITORY: "diverger/armbian-build"
   BUILD_REF: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ref || github.event.inputs.branch || 'armbian' }}
 
@@ -4580,7 +4580,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           token: ${{ env.GH_TOKEN }}
-          owner: ${{ github.repository_owner }}
+          owner: ${{ github.actor }}
           repo: 'armbian-custom'
           tag: ${{ env.RELEASE_TAG }}
           artifacts: 'release.txt,oss-urls/image-urls.txt'
