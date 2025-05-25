@@ -1,4 +1,4 @@
-name: "Build All Standard Supports"
+name: "Build All Images"
 run-name: >
   Build by @${{ github.actor }} with ${{
     (github.event_name == 'workflow_dispatch' && 'manual') ||
