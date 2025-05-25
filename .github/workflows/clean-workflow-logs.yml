@@ -14,6 +14,11 @@ on:
         description: "The amount of latest workflow runs to keep"
         default: "0"
         required: false
+      dry_run:
+        description: "Only show what would be deleted (dry run)"
+        type: boolean
+        default: true
+        required: false
 
 env:
   SCHEDULED_RUNS_OLDER_THAN: "21"
