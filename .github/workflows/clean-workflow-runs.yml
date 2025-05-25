@@ -1,4 +1,4 @@
-name: 🗑️ Clean Workflow Logs
+name: 🗑️ Clean Workflow Runs
 
 on:
   schedule:
