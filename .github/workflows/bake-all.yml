@@ -354,61 +354,71 @@ jobs:
           echo "=== DEBUG: pip editable install troubleshooting ==="
           echo "Current working directory: $(pwd)"
           echo "Current user: $(whoami)"
+          echo "User ID: $(id)"
           echo "Python version: $(python3 --version)"
           echo "Pip version: $(python3 -m pip --version)"
+
+          echo "Environment variables:"
+          env | grep -E "(SRC|ARMBIAN|PATH)" | sort
 
           echo "Contents of current directory:"
           ls -la
 
+          echo "Contents of /armbian directory:"
+          ls -la /armbian/ | head -20
+
           echo "Checking if oras-py-local directory exists:"
-          if [ -d "./oras-py-local" ]; then
-            echo "✓ ./oras-py-local directory exists"
-            echo "Contents of ./oras-py-local:"
-            ls -la ./oras-py-local/
-            echo "Checking for Python package files:"
-            [ -f "./oras-py-local/setup.py" ] && echo "✓ setup.py found" || echo "✗ setup.py not found"
-            [ -f "./oras-py-local/pyproject.toml" ] && echo "✓ pyproject.toml found" || echo "✗ pyproject.toml not found"
-            if [ -f "./oras-py-local/setup.py" ]; then
-              echo "Contents of setup.py (first 20 lines):"
-              head -n 20 "./oras-py-local/setup.py"
+          for check_path in "./oras-py-local" "/armbian/oras-py-local" "oras-py-local"; do
+            echo "Checking path: $check_path"
+            if [ -d "$check_path" ]; then
+              echo "✓ $check_path directory exists"
+              echo "Contents of $check_path:"
+              ls -la "$check_path/"
+              echo "Checking for Python package files in $check_path:"
+              [ -f "$check_path/setup.py" ] && echo "✓ setup.py found in $check_path" || echo "✗ setup.py not found in $check_path"
+              [ -f "$check_path/pyproject.toml" ] && echo "✓ pyproject.toml found in $check_path" || echo "✗ pyproject.toml not found in $check_path"
+              if [ -f "$check_path/setup.py" ]; then
+                echo "Contents of $check_path/setup.py (first 20 lines):"
+                head -n 20 "$check_path/setup.py"
+              fi
+            else
+              echo "✗ $check_path directory does NOT exist"
             fi
-          else
-            echo "✗ ./oras-py-local directory does NOT exist"
-          fi
+          done
 
           echo "Checking requirements.txt:"
-          if [ -f "./requirements.txt" ]; then
-            echo "Contents of requirements.txt:"
-            cat ./requirements.txt
-            echo "Lines containing oras:"
-            grep -n "oras" ./requirements.txt || echo "No oras lines found"
-          else
-            echo "✗ requirements.txt not found"
-          fi
+          for req_path in "./requirements.txt" "/armbian/requirements.txt"; do
+            echo "Checking requirements.txt at: $req_path"
+            if [ -f "$req_path" ]; then
+              echo "Contents of $req_path:"
+              cat "$req_path"
+              echo "Lines containing oras in $req_path:"
+              grep -n "oras" "$req_path" || echo "No oras lines found"
+            else
+              echo "✗ requirements.txt not found at $req_path"
+            fi
+          done
 
           echo "Testing pip install commands:"
-          echo "1. Testing basic pip install of oras-py-local:"
-          if python3 -m pip install --dry-run ./oras-py-local 2>&1; then
-            echo "✓ Basic install would work"
-          else
-            echo "✗ Basic install would fail"
-          fi
+          for test_path in "./oras-py-local" "/armbian/oras-py-local" "oras-py-local"; do
+            if [ -d "$test_path" ]; then
+              echo "1. Testing basic pip install of $test_path:"
+              python3 -m pip install --dry-run "$test_path" 2>&1 || echo "Basic install failed for $test_path"
 
-          echo "2. Testing editable pip install of oras-py-local:"
-          if python3 -m pip install --dry-run -e ./oras-py-local 2>&1; then
-            echo "✓ Editable install would work"
-          else
-            echo "✗ Editable install would fail"
-          fi
+              echo "2. Testing editable pip install of $test_path:"
+              python3 -m pip install --dry-run -e "$test_path" 2>&1 || echo "Editable install failed for $test_path"
 
-          echo "3. Testing absolute path editable install:"
-          ABSOLUTE_PATH="$(pwd)/oras-py-local"
-          echo "Absolute path: $ABSOLUTE_PATH"
-          if python3 -m pip install --dry-run -e "$ABSOLUTE_PATH" 2>&1; then
-            echo "✓ Absolute path editable install would work"
-          else
-            echo "✗ Absolute path editable install would fail"
-          fi
+              echo "3. Testing absolute path editable install:"
+              if [[ "$test_path" = /* ]]; then
+                ABSOLUTE_PATH="$test_path"
+              else
+                ABSOLUTE_PATH="$(pwd)/$test_path"
+              fi
+              echo "Absolute path: $ABSOLUTE_PATH"
+              python3 -m pip install --dry-run -e "$ABSOLUTE_PATH" 2>&1 || echo "Absolute path editable install failed for $ABSOLUTE_PATH"
+              break
+            fi
+          done
 
           echo "=== END DEBUG ==="
           EOF
