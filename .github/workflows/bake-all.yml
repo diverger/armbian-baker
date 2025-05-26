@@ -299,7 +299,8 @@ jobs:
             cat "$REQUIREMENTS_FILE"
 
             # Comment out any existing 'oras' lines to avoid conflicts
-            sed -i -E '/^oras(==|>=|<=)?/s/^/#/' "$REQUIREMENTS_FILE"
+            # Changed (==|>=|<=)? to ((==|>=|<=)|) to make the group optional
+            sed -i -E '/^oras((==|>=|<=)|)/s/^/#/' "$REQUIREMENTS_FILE"
 
             # Remove any previous attempts to add different relative/absolute paths (optional, for cleanup)
             # Use | as delimiter for sed
@@ -311,9 +312,6 @@ jobs:
             sed -i -E '\|^-e build/oras-py-local|d' "$REQUIREMENTS_FILE" # Cleanup for -e current path
 
             # Cleanup for direct path (non-editable) - ensure this matches the new path exactly
-            # The sed pattern \|^build\/oras-py-local$|d will match the exact line "build/oras-py-local"
-            # No, the variable doesn't need extra escaping if it doesn't contain the delimiter itself.
-            # The existing sed -i -E "\|^${LOCAL_ORAS_PATH_FOR_REQS}$|d" should work.
             sed -i -E "\|^\${LOCAL_ORAS_PATH_FOR_REQS}\$|d" "$REQUIREMENTS_FILE"
             # Also clean up the previous absolute path attempt /armbian/oras-py-local
             sed -i -E '\|^\/armbian\/oras-py-local$|d' "$REQUIREMENTS_FILE"
