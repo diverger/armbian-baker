@@ -271,13 +271,6 @@ jobs:
           ref: 'develop'
           path: build/oras-py-local # This will checkout to ${GITHUB_WORKSPACE}/oras-py-local
 
-      - name: Checkout patched oras-py
-        uses: actions/checkout@v4
-        with:
-          repository: 'diverger/oras-py'
-          ref: 'develop'
-          path: build/oras-py-local
-
       - name: Verify oras-py checkout
         shell: bash
         run: |
@@ -309,18 +302,21 @@ jobs:
 
             # Remove any previous attempts to add different relative/absolute paths (optional, for cleanup)
             # Use | as delimiter for sed
+            # Cleanup for editable paths
             sed -i -E '\|^-e /home/runner/work/armbian-baker/armbian-baker/oras-py-local|d' "$REQUIREMENTS_FILE"
             sed -i -E '\|^-e \.\./oras-py-local|d' "$REQUIREMENTS_FILE"
             sed -i -E '\|^-e \./oras-py-local|d' "$REQUIREMENTS_FILE"
-            sed -i -E '\|^-e /armbian/oras-py-local|d' "$REQUIREMENTS_FILE" # Cleanup for the new absolute path
+            sed -i -E '\|^-e /armbian/oras-py-local|d' "$REQUIREMENTS_FILE"
+            # Cleanup for direct path (non-editable)
+            sed -i -E "\|^${LOCAL_ORAS_PATH_FOR_REQS}$|d" "$REQUIREMENTS_FILE"
 
-            # Add the local editable install path using the absolute path
+            # Add the local install path (not editable)
             # Ensure it's added only once
-            if ! grep -qF -- "-e $LOCAL_ORAS_PATH_FOR_REQS" "$REQUIREMENTS_FILE"; then
-              echo "-e $LOCAL_ORAS_PATH_FOR_REQS" >> "$REQUIREMENTS_FILE"
-              echo "Added local oras-py to $REQUIREMENTS_FILE: -e $LOCAL_ORAS_PATH_FOR_REQS"
+            if ! grep -qFx -- "$LOCAL_ORAS_PATH_FOR_REQS" "$REQUIREMENTS_FILE"; then
+              echo "$LOCAL_ORAS_PATH_FOR_REQS" >> "$REQUIREMENTS_FILE"
+              echo "Added local oras-py to $REQUIREMENTS_FILE: $LOCAL_ORAS_PATH_FOR_REQS"
             else
-              echo "Local oras-py already configured in $REQUIREMENTS_FILE: -e $LOCAL_ORAS_PATH_FOR_REQS"
+              echo "Local oras-py already configured in $REQUIREMENTS_FILE: $LOCAL_ORAS_PATH_FOR_REQS"
             fi
 
             echo "Patched $REQUIREMENTS_FILE content:"
