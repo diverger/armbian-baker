@@ -299,8 +299,12 @@ jobs:
             cat "$REQUIREMENTS_FILE"
 
             # Comment out any existing 'oras' lines to avoid conflicts
-            # Changed (==|>=|<=)? to ((==|>=|<=)|) to make the group optional
-            sed -i -E '/^oras((==|>=|<=)|)/s/^/#/' "$REQUIREMENTS_FILE"
+            # First, handle lines with oras and version specifiers (e.g., oras == 0.2.31)
+            # Allows for optional spaces between "oras" and the version constraint.
+            sed -i -E '/^oras[[:space:]]*(==|>=|<=)/s/^/#/' "$REQUIREMENTS_FILE"
+            # Then, handle lines with "oras" by itself or followed only by spaces/comment
+            # (e.g., "oras", "oras # comment", "oras    ")
+            sed -i -E '/^oras[[:space:]]*($|#)/s/^/#/' "$REQUIREMENTS_FILE"
 
             # Remove any previous attempts to add different relative/absolute paths (optional, for cleanup)
             # Use | as delimiter for sed
