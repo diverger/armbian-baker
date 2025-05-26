@@ -271,11 +271,34 @@ jobs:
           ref: 'develop'
           path: build/oras-py-local # This will checkout to ${GITHUB_WORKSPACE}/oras-py-local
 
+      - name: Checkout patched oras-py
+        uses: actions/checkout@v4
+        with:
+          repository: 'diverger/oras-py'
+          ref: 'develop'
+          path: build/oras-py-local
+
+      - name: Verify oras-py checkout
+        shell: bash
+        run: |
+          echo "Listing contents of ${PWD}/build/oras-py-local:"
+          ls -la "${PWD}/build/oras-py-local"
+          echo "Verifying presence of setup.py or pyproject.toml in ${PWD}/build/oras-py-local:"
+          if [ -f "${PWD}/build/oras-py-local/setup.py" ] || [ -f "${PWD}/build/oras-py-local/pyproject.toml" ]; then
+            echo "Found setup.py or pyproject.toml."
+          else
+            echo "ERROR: setup.py or pyproject.toml NOT FOUND in ${PWD}/build/oras-py-local."
+            # Optionally, list one level deeper if you suspect nesting
+            # echo "Listing contents of ${PWD}/build/oras-py-local/*:"
+            # ls -la "${PWD}/build/oras-py-local/*" || true
+            exit 1 # Fail early if critical files are missing
+          fi
+
       - name: Patch requirements.txt for local oras-py
         run: |
           REQUIREMENTS_FILE="build/requirements.txt"
-          # Path to local oras-py relative to the requirements.txt file itself
-          LOCAL_ORAS_PATH_FOR_REQS="./oras-py-local"
+          # Path to local oras-py, absolute within the build environment
+          LOCAL_ORAS_PATH_FOR_REQS="/armbian/oras-py-local"
 
           if [ -f "$REQUIREMENTS_FILE" ]; then
             echo "Original $REQUIREMENTS_FILE content:"
@@ -288,9 +311,10 @@ jobs:
             # Use | as delimiter for sed
             sed -i -E '\|^-e /home/runner/work/armbian-baker/armbian-baker/oras-py-local|d' "$REQUIREMENTS_FILE"
             sed -i -E '\|^-e \.\./oras-py-local|d' "$REQUIREMENTS_FILE"
-            sed -i -E '\|^-e \./oras-py-local|d' "$REQUIREMENTS_FILE" # Includes current target for idempotency
+            sed -i -E '\|^-e \./oras-py-local|d' "$REQUIREMENTS_FILE"
+            sed -i -E '\|^-e /armbian/oras-py-local|d' "$REQUIREMENTS_FILE" # Cleanup for the new absolute path
 
-            # Add the local editable install path using the new relative path
+            # Add the local editable install path using the absolute path
             # Ensure it's added only once
             if ! grep -qF -- "-e $LOCAL_ORAS_PATH_FOR_REQS" "$REQUIREMENTS_FILE"; then
               echo "-e $LOCAL_ORAS_PATH_FOR_REQS" >> "$REQUIREMENTS_FILE"
