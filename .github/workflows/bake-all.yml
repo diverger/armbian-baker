@@ -292,8 +292,8 @@ jobs:
           REQUIREMENTS_FILE="build/requirements.txt"
           # The build directory is mounted as /armbian in the Docker container
           # So build/oras-py-local becomes /armbian/oras-py-local inside the container
-          # Use -e flag for editable install which works better with local paths
-          LOCAL_ORAS_PATH_FOR_REQS="-e /armbian/oras-py-local"
+          # Use file:// URL format for local path installation
+          LOCAL_ORAS_PATH_FOR_REQS="file:///armbian/oras-py-local"
 
           if [ -f "$REQUIREMENTS_FILE" ]; then
             echo "Original $REQUIREMENTS_FILE content:"
@@ -313,7 +313,7 @@ jobs:
             grep -v "^/armbian/oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
             grep -v "^file://.*oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
 
-            # Add the local install path with -e flag for editable install
+            # Add the local install path using file:// URL format
             # Ensure it's added only once and matches the whole line
             if ! grep -qFx -- "$LOCAL_ORAS_PATH_FOR_REQS" "$REQUIREMENTS_FILE"; then
               echo "$LOCAL_ORAS_PATH_FOR_REQS" >> "$REQUIREMENTS_FILE"
