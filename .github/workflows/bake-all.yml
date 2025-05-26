@@ -287,7 +287,7 @@ jobs:
             exit 1 # Fail early if critical files are missing
           fi
 
-      - name: Debug: Verify directory structure for Docker mount
+      - name: Verify directory structure for Docker mount
         run: |
           echo "Current working directory: ${PWD}"
           echo "Listing contents of build directory:"
