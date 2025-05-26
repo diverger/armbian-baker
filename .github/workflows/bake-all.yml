@@ -306,8 +306,8 @@ jobs:
           REQUIREMENTS_FILE="build/requirements.txt"
           # The build directory is mounted as /armbian in the Docker container
           # So build/oras-py-local becomes /armbian/oras-py-local inside the container
-          # Use relative path from the requirements.txt location
-          LOCAL_ORAS_PATH_FOR_REQS="./oras-py-local"
+          # Use editable install format for local package
+          LOCAL_ORAS_PATH_FOR_REQS="-e ./oras-py-local"
 
           if [ -f "$REQUIREMENTS_FILE" ]; then
             echo "Original $REQUIREMENTS_FILE content:"
@@ -328,9 +328,9 @@ jobs:
             grep -v "^file://.*oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
             grep -v "^\\./oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
 
-            # Add the local install path using relative path from requirements.txt location
+            # Add the local install path using editable install format
             # Since requirements.txt is in /armbian/ and oras-py-local is in /armbian/oras-py-local
-            # we can use ./oras-py-local as a relative path
+            # we use -e ./oras-py-local for editable install
             if ! grep -qFx -- "$LOCAL_ORAS_PATH_FOR_REQS" "$REQUIREMENTS_FILE"; then
               echo "$LOCAL_ORAS_PATH_FOR_REQS" >> "$REQUIREMENTS_FILE"
               echo "Added local oras-py to $REQUIREMENTS_FILE: $LOCAL_ORAS_PATH_FOR_REQS"
