@@ -228,7 +228,7 @@ jobs:
           echo "sha1=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
           cd ..
 
-      - name: "Checkout customizations"
+      - name: Checkout customizations
         if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
         uses: actions/checkout@v4
         with:
@@ -238,6 +238,103 @@ jobs:
           fetch-depth: 0
           clean: false
           path: custom
+
+      - name: Checkout patched oras-py
+        uses: actions/checkout@v4
+        with:
+          repository: 'diverger/oras-py'
+          ref: 'develop'
+          path: oras-py-temp # Temporary location for oras-py
+
+      - name: Put userpatches in place
+        run: |
+          mkdir -pv build/userpatches
+          rsync -av userpatches/${{env.USERPATCHES_DIR}}/. build/userpatches/
+          rsync -av custom/userpatches/. build/userpatches/
+
+          # Configure local oras-py package for Docker container access
+          # SOLUTION: Place oras-py in userpatches directory because Armbian preserves
+          # userpatches when launching Docker containers, ensuring pip can access the package
+          echo "Setting up local oras-py package for Armbian build..."
+          cp -r oras-py-temp build/userpatches/oras-py-local
+          echo "✓ oras-py copied to build/userpatches/oras-py-local"
+
+          # Create a minimal debug script for emergency troubleshooting (only used when DEBUG_PIP_INSTALL=yes)
+          cat > build/userpatches/debug-pip-install.sh << 'EOF'
+          #!/bin/bash
+          echo "=== pip edible install debug ==="
+          echo "Working directory: $(pwd)"
+          echo "Python: $(python3 --version)"
+          echo "Pip: $(python3 -m pip --version)"
+
+          # Check oras-py package accessibility
+          if [ -d "./userpatches/oras-py-local" ]; then
+            echo "✓ oras-py package found at ./userpatches/oras-py-local"
+            [ -f "./userpatches/oras-py-local/setup.py" ] && echo "✓ setup.py present"
+            [ -f "./userpatches/oras-py-local/pyproject.toml" ] && echo "✓ pyproject.toml present"
+          else
+            echo "✗ oras-py package NOT found at ./userpatches/oras-py-local"
+          fi
+
+          # Check requirements.txt
+          if [ -f "./requirements.txt" ]; then
+            echo "Requirements.txt contains:"
+            grep -E "(oras|userpatches)" ./requirements.txt || echo "No oras references found"
+          fi
+          echo "=== debug end ==="
+          EOF
+          chmod +x build/userpatches/debug-pip-install.sh
+
+      - name: Verify oras-py setup for Docker
+        shell: bash
+        run: |
+          echo "Verifying oras-py package structure:"
+          if [ -f "oras-py-temp/setup.py" ] || [ -f "oras-py-temp/pyproject.toml" ]; then
+            echo "✓ Valid Python package found in oras-py-temp"
+          else
+            echo "✗ ERROR: Invalid Python package in oras-py-temp"
+            exit 1
+          fi
+
+          echo "Verifying userpatches setup:"
+          if [ -d "build/userpatches/oras-py-local" ]; then
+            echo "✓ oras-py-local copied to userpatches"
+          else
+            echo "✗ ERROR: oras-py-local not found in userpatches"
+            exit 1
+          fi
+
+      - name: Patch requirements.txt for local oras-py
+        run: |
+          # Configure requirements.txt to use the local oras-py package from userpatches
+          # This allows the Docker container to access oras-py via the preserved userpatches directory
+          # Path: build/userpatches/oras-py-local -> /armbian/userpatches/oras-py-local (in container)
+          REQUIREMENTS_FILE="build/requirements.txt"
+          LOCAL_ORAS_PATH_FOR_REQS="-e ./userpatches/oras-py-local"
+
+          if [ -f "$REQUIREMENTS_FILE" ]; then
+            # Comment out any existing oras package references to avoid conflicts
+            sed -i -E '/^oras[[:space:]]*(==|>=|<=)/s/^/#/' "$REQUIREMENTS_FILE"
+            sed -i -E '/^oras[[:space:]]*$/s/^/#/' "$REQUIREMENTS_FILE"
+            sed -i -E '/^oras[[:space:]]*#/s/^/#/' "$REQUIREMENTS_FILE"
+
+            # Clean up any previous oras-py-local references
+            grep -v "^-e.*oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
+
+            # Add the local editable install reference
+            if ! grep -qFx -- "$LOCAL_ORAS_PATH_FOR_REQS" "$REQUIREMENTS_FILE"; then
+              echo "$LOCAL_ORAS_PATH_FOR_REQS" >> "$REQUIREMENTS_FILE"
+              echo "✓ Added local oras-py to requirements.txt: $LOCAL_ORAS_PATH_FOR_REQS"
+            else
+              echo "✓ Local oras-py already configured in requirements.txt"
+            fi
+
+            echo "Updated requirements.txt:"
+            grep -E "(oras|userpatches)" "$REQUIREMENTS_FILE" || echo "No oras references visible"
+          else
+            echo "✗ ERROR: $REQUIREMENTS_FILE not found!"
+            exit 1
+          fi
 
       - name: GitHub cache
         id: cache-restore
@@ -257,185 +354,6 @@ jobs:
           registry: ghcr.io
           username: "${{ github.actor }}" # GitHub username or org
           password: ${{ env.GHCR_TOKEN }}  # GitHub actions builtin token. repo has to have pkg access.
-
-      - name: Checkout patched oras-py
-        uses: actions/checkout@v4
-        with:
-          repository: 'diverger/oras-py'
-          ref: 'develop'
-          path: oras-py-temp # Temporary location for oras-py
-
-      - name: Put userpatches in place
-        run: |
-          mkdir -pv build/userpatches
-          rsync -av userpatches/${{env.USERPATCHES_DIR}}/. build/userpatches/
-          rsync -av custom/userpatches/. build/userpatches/
-
-          # Copy oras-py to userpatches so it's available in Docker container
-          echo "Copying oras-py to userpatches for Docker access..."
-          cp -r oras-py-temp build/userpatches/oras-py-local
-          echo "oras-py copied to build/userpatches/oras-py-local"
-
-          # Create debug script in userpatches
-          cat > build/userpatches/debug-pip-install.sh << 'EOF'
-          #!/bin/bash
-          set -e
-          echo "=== DEBUG: pip editable install troubleshooting ==="
-          echo "Current working directory: $(pwd)"
-          echo "Current user: $(whoami)"
-          echo "User ID: $(id)"
-          echo "Python version: $(python3 --version)"
-          echo "Pip version: $(python3 -m pip --version)"
-
-          echo "Environment variables:"
-          env | grep -E "(SRC|ARMBIAN|PATH)" | sort
-
-          echo "Contents of current directory:"
-          ls -la
-
-          echo "Contents of /armbian directory:"
-          ls -la /armbian/ | head -20
-
-          echo "Contents of /armbian/userpatches directory:"
-          ls -la /armbian/userpatches/ | head -20
-
-          echo "Checking if oras-py-local directory exists:"
-          for check_path in "./userpatches/oras-py-local" "/armbian/userpatches/oras-py-local" "userpatches/oras-py-local"; do
-            echo "Checking path: $check_path"
-            if [ -d "$check_path" ]; then
-              echo "✓ $check_path directory exists"
-              echo "Contents of $check_path:"
-              ls -la "$check_path/"
-              echo "Checking for Python package files in $check_path:"
-              [ -f "$check_path/setup.py" ] && echo "✓ setup.py found in $check_path" || echo "✗ setup.py not found in $check_path"
-              [ -f "$check_path/pyproject.toml" ] && echo "✓ pyproject.toml found in $check_path" || echo "✗ pyproject.toml not found in $check_path"
-              if [ -f "$check_path/setup.py" ]; then
-                echo "Contents of $check_path/setup.py (first 20 lines):"
-                head -n 20 "$check_path/setup.py"
-              fi
-            else
-              echo "✗ $check_path directory does NOT exist"
-            fi
-          done
-
-          echo "Checking requirements.txt:"
-          for req_path in "./requirements.txt" "/armbian/requirements.txt"; do
-            echo "Checking requirements.txt at: $req_path"
-            if [ -f "$req_path" ]; then
-              echo "Contents of $req_path:"
-              cat "$req_path"
-              echo "Lines containing oras in $req_path:"
-              grep -n "oras" "$req_path" || echo "No oras lines found"
-            else
-              echo "✗ requirements.txt not found at $req_path"
-            fi
-          done
-
-          echo "Testing pip install commands:"
-          for test_path in "./userpatches/oras-py-local" "/armbian/userpatches/oras-py-local" "userpatches/oras-py-local"; do
-            if [ -d "$test_path" ]; then
-              echo "1. Testing basic pip install of $test_path:"
-              python3 -m pip install --dry-run "$test_path" 2>&1 || echo "Basic install failed for $test_path"
-
-              echo "2. Testing editable pip install of $test_path:"
-              python3 -m pip install --dry-run -e "$test_path" 2>&1 || echo "Editable install failed for $test_path"
-
-              echo "3. Testing absolute path editable install:"
-              if [[ "$test_path" = /* ]]; then
-                ABSOLUTE_PATH="$test_path"
-              else
-                ABSOLUTE_PATH="$(pwd)/$test_path"
-              fi
-              echo "Absolute path: $ABSOLUTE_PATH"
-              python3 -m pip install --dry-run -e "$ABSOLUTE_PATH" 2>&1 || echo "Absolute path editable install failed for $ABSOLUTE_PATH"
-              break
-            fi
-          done
-
-          echo "=== END DEBUG ==="
-          EOF
-          chmod +x build/userpatches/debug-pip-install.sh
-          echo "Debug script created at build/userpatches/debug-pip-install.sh"
-
-      - name: Verify oras-py checkout
-        shell: bash
-        run: |
-          echo "Listing contents of ${PWD}/oras-py-temp:"
-          ls -la "${PWD}/oras-py-temp"
-          echo "Verifying presence of setup.py or pyproject.toml in ${PWD}/oras-py-temp:"
-          if [ -f "${PWD}/oras-py-temp/setup.py" ] || [ -f "${PWD}/oras-py-temp/pyproject.toml" ]; then
-            echo "Found setup.py or pyproject.toml."
-          else
-            echo "ERROR: setup.py or pyproject.toml NOT FOUND in ${PWD}/oras-py-temp."
-            exit 1 # Fail early if critical files are missing
-          fi
-
-      - name: Verify directory structure for Docker mount
-        run: |
-          echo "Current working directory: ${PWD}"
-          echo "Listing contents of build directory:"
-          ls -la build/
-          echo "Listing contents of build/userpatches directory:"
-          ls -la build/userpatches/
-          echo "Checking if build/userpatches/oras-py-local exists:"
-          if [ -d "build/userpatches/oras-py-local" ]; then
-            echo "✓ build/userpatches/oras-py-local directory exists"
-            echo "Contents of build/userpatches/oras-py-local:"
-            ls -la build/userpatches/oras-py-local/
-          else
-            echo "✗ build/userpatches/oras-py-local directory does NOT exist"
-          fi
-          echo "Checking if build/userpatches/debug-pip-install.sh exists:"
-          if [ -f "build/userpatches/debug-pip-install.sh" ]; then
-            echo "✓ build/userpatches/debug-pip-install.sh exists"
-          else
-            echo "✗ build/userpatches/debug-pip-install.sh does NOT exist"
-          fi
-
-      - name: Patch requirements.txt for local oras-py
-        run: |
-          REQUIREMENTS_FILE="build/requirements.txt"
-          # The userpatches directory is preserved in Docker, so we reference the path within userpatches
-          # So build/userpatches/oras-py-local becomes /armbian/userpatches/oras-py-local inside the container
-          # Use editable install format for local package
-          LOCAL_ORAS_PATH_FOR_REQS="-e ./userpatches/oras-py-local"
-
-          if [ -f "$REQUIREMENTS_FILE" ]; then
-            echo "Original $REQUIREMENTS_FILE content:"
-            cat "$REQUIREMENTS_FILE"
-
-            # Comment out any existing 'oras' lines to avoid conflicts
-            # First, handle lines with oras and version specifiers (e.g., oras == 0.2.31)
-            sed -i -E '/^oras[[:space:]]*(==|>=|<=)/s/^/#/' "$REQUIREMENTS_FILE"
-            # Then, handle lines with "oras" by itself or followed only by spaces/comment
-            sed -i -E '/^oras[[:space:]]*$/s/^/#/' "$REQUIREMENTS_FILE"
-            sed -i -E '/^oras[[:space:]]*#/s/^/#/' "$REQUIREMENTS_FILE"
-
-            # Remove any previous attempts to add different relative/absolute paths (optional, for cleanup)
-            # Clean up various possible previous attempts
-            grep -v "^-e.*oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
-            grep -v "^build/oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
-            grep -v "^/armbian/oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
-            grep -v "^file://.*oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
-            grep -v "^\\./oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
-            grep -v "^\\./userpatches/oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
-
-            # Add the local install path using editable install format
-            # Since requirements.txt is in /armbian/ and oras-py-local is in /armbian/userpatches/oras-py-local
-            # we use -e ./userpatches/oras-py-local for editable install
-            if ! grep -qFx -- "$LOCAL_ORAS_PATH_FOR_REQS" "$REQUIREMENTS_FILE"; then
-              echo "$LOCAL_ORAS_PATH_FOR_REQS" >> "$REQUIREMENTS_FILE"
-              echo "Added local oras-py to $REQUIREMENTS_FILE: $LOCAL_ORAS_PATH_FOR_REQS"
-            else
-              echo "Local oras-py already configured in $REQUIREMENTS_FILE: $LOCAL_ORAS_PATH_FOR_REQS"
-            fi
-
-            echo "Patched $REQUIREMENTS_FILE content:"
-            cat "$REQUIREMENTS_FILE"
-          else
-            echo "Error: $REQUIREMENTS_FILE not found at ${PWD}/$REQUIREMENTS_FILE !"
-            exit 1
-          fi
 
       - name: Prepare Info JSON and Matrices
         id: prepare-matrix
@@ -467,7 +385,6 @@ jobs:
             CHECK_OCI=${{ env.CHECK_OCI }} \
             TARGETS_FILENAME=${{ env.TARGETS_FILE }} \
             SKIP_IMAGES=${{ github.event.inputs.skip_images || 'no'}} \
-            DEBUG_PIP_INSTALL=yes \
             ${{env.EXTRA_PARAMS_ALL_BUILDS}} SHARE_LOG=no
 
       - name: "Logs: ${{ steps.prepare-matrix.outputs.logs_url }}"
