@@ -274,25 +274,32 @@ jobs:
       - name: Patch requirements.txt for local oras-py
         run: |
           REQUIREMENTS_FILE="build/requirements.txt" # Path to requirements.txt within the armbian-build checkout
-          LOCAL_ORAS_PATH="../oras-py-local" # Path to local oras relative to the 'build' directory
+          # Use an absolute path assuming GITHUB_WORKSPACE is available in the pip execution environment
+          ABSOLUTE_LOCAL_ORAS_PATH="${GITHUB_WORKSPACE}/oras-py-local"
 
           if [ -f "$REQUIREMENTS_FILE" ]; then
-            echo "Original $REQUIREMENTS_FILE:"
+            echo "Original $REQUIREMENTS_FILE content:"
             cat "$REQUIREMENTS_FILE"
 
-            # Comment out any existing 'oras' lines
+            # Comment out any existing 'oras' lines to avoid conflicts
             sed -i -E '/^oras(==|>=|<=)?/s/^/#/' "$REQUIREMENTS_FILE"
 
-            # Add the local editable install path for oras-py
-            # Ensure it's added only once if the script runs multiple times (though unlikely for this step)
-            if ! grep -q "$LOCAL_ORAS_PATH" "$REQUIREMENTS_FILE"; then
-              echo "-e $LOCAL_ORAS_PATH" >> "$REQUIREMENTS_FILE"
+            # Remove any previous attempts to add a relative path for oras-py (optional, for cleanup)
+            sed -i -E '/^-e \.\.\/oras-py-local/d' "$REQUIREMENTS_FILE"
+
+            # Add the local editable install path using the absolute path
+            # Ensure it's added only once
+            if ! grep -qF -- "-e $ABSOLUTE_LOCAL_ORAS_PATH" "$REQUIREMENTS_FILE"; then
+              echo "-e $ABSOLUTE_LOCAL_ORAS_PATH" >> "$REQUIREMENTS_FILE"
+              echo "Added local oras-py to $REQUIREMENTS_FILE: -e $ABSOLUTE_LOCAL_ORAS_PATH"
+            else
+              echo "Local oras-py already configured in $REQUIREMENTS_FILE: -e $ABSOLUTE_LOCAL_ORAS_PATH"
             fi
 
-            echo "Patched $REQUIREMENTS_FILE to use local oras-py:"
+            echo "Patched $REQUIREMENTS_FILE content:"
             cat "$REQUIREMENTS_FILE"
           else
-            echo "Error: $REQUIREMENTS_FILE not found!"
+            echo "Error: $REQUIREMENTS_FILE not found at ${PWD}/$REQUIREMENTS_FILE !"
             exit 1
           fi
         shell: bash
