@@ -285,9 +285,10 @@ jobs:
             sed -i -E '/^oras(==|>=|<=)?/s/^/#/' "$REQUIREMENTS_FILE"
 
             # Remove any previous attempts to add different relative/absolute paths (optional, for cleanup)
-            sed -i -E '%^-e /home/runner/work/armbian-baker/armbian-baker/oras-py-local%d' "$REQUIREMENTS_FILE"
-            sed -i -E '%^-e \.\./oras-py-local%d' "$REQUIREMENTS_FILE"
-            sed -i -E '%^-e \./oras-py-local%d' "$REQUIREMENTS_FILE"
+            # Use | as delimiter for sed
+            sed -i -E '\|^-e /home/runner/work/armbian-baker/armbian-baker/oras-py-local|d' "$REQUIREMENTS_FILE"
+            sed -i -E '\|^-e \.\./oras-py-local|d' "$REQUIREMENTS_FILE"
+            sed -i -E '\|^-e \./oras-py-local|d' "$REQUIREMENTS_FILE" # Includes current target for idempotency
 
             # Add the local editable install path using the new relative path
             # Ensure it's added only once
@@ -304,7 +305,6 @@ jobs:
             echo "Error: $REQUIREMENTS_FILE not found at ${PWD}/$REQUIREMENTS_FILE !"
             exit 1
           fi
-        shell: bash
 
       - name: Prepare Info JSON and Matrices
         id: prepare-matrix
