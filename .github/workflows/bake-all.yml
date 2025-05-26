@@ -274,8 +274,12 @@ jobs:
       - name: Patch requirements.txt for local oras-py
         run: |
           REQUIREMENTS_FILE="build/requirements.txt" # Path to requirements.txt within the armbian-build checkout
-          # Use an absolute path assuming GITHUB_WORKSPACE is available in the pip execution environment
-          ABSOLUTE_LOCAL_ORAS_PATH="${GITHUB_WORKSPACE}/oras-py-local"
+          # Path to local oras-py relative to the GITHUB_WORKSPACE root
+          # This assumes 'oras-py-local' is checked out at the root of GITHUB_WORKSPACE
+          # and 'build' is also at the root.
+          # When pip runs from within the 'build' dir (or its equivalent /armbian),
+          # it needs to go one level up to find oras-py-local.
+          RELATIVE_LOCAL_ORAS_PATH="../oras-py-local"
 
           if [ -f "$REQUIREMENTS_FILE" ]; then
             echo "Original $REQUIREMENTS_FILE content:"
@@ -284,16 +288,17 @@ jobs:
             # Comment out any existing 'oras' lines to avoid conflicts
             sed -i -E '/^oras(==|>=|<=)?/s/^/#/' "$REQUIREMENTS_FILE"
 
-            # Remove any previous attempts to add a relative path for oras-py (optional, for cleanup)
-            sed -i -E '/^-e \.\.\/oras-py-local/d' "$REQUIREMENTS_FILE"
+            # Remove any previous attempts to add an absolute or different relative path (optional, for cleanup)
+            sed -i -E '/^-e \/home\/runner\/work\/armbian-baker\/armbian-baker\/oras-py-local/d' "$REQUIREMENTS_FILE"
+            sed -i -E '/^-e \.\.\/oras-py-local/d' "$REQUIREMENTS_FILE" # Clean up previous relative path too
 
-            # Add the local editable install path using the absolute path
+            # Add the local editable install path using the relative path
             # Ensure it's added only once
-            if ! grep -qF -- "-e $ABSOLUTE_LOCAL_ORAS_PATH" "$REQUIREMENTS_FILE"; then
-              echo "-e $ABSOLUTE_LOCAL_ORAS_PATH" >> "$REQUIREMENTS_FILE"
-              echo "Added local oras-py to $REQUIREMENTS_FILE: -e $ABSOLUTE_LOCAL_ORAS_PATH"
+            if ! grep -qF -- "-e $RELATIVE_LOCAL_ORAS_PATH" "$REQUIREMENTS_FILE"; then
+              echo "-e $RELATIVE_LOCAL_ORAS_PATH" >> "$REQUIREMENTS_FILE"
+              echo "Added local oras-py to $REQUIREMENTS_FILE: -e $RELATIVE_LOCAL_ORAS_PATH"
             else
-              echo "Local oras-py already configured in $REQUIREMENTS_FILE: -e $ABSOLUTE_LOCAL_ORAS_PATH"
+              echo "Local oras-py already configured in $REQUIREMENTS_FILE: -e $RELATIVE_LOCAL_ORAS_PATH"
             fi
 
             echo "Patched $REQUIREMENTS_FILE content:"
