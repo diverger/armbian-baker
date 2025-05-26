@@ -300,25 +300,16 @@ jobs:
 
             # Comment out any existing 'oras' lines to avoid conflicts
             # First, handle lines with oras and version specifiers (e.g., oras == 0.2.31)
-            # Replaced [[:space:]] with [ \t]
-            sed -i -E '/^oras[ \t]*(==|>=|<=)/s/^/#/' "$REQUIREMENTS_FILE"
+            sed -i -E '/^oras[[:space:]]*(==|>=|<=)/s/^/#/' "$REQUIREMENTS_FILE"
             # Then, handle lines with "oras" by itself or followed only by spaces/comment
-            # Replaced [[:space:]] with [ \t]
-            sed -i -E '/^oras[ \t]*($|#)/s/^/#/' "$REQUIREMENTS_FILE"
+            sed -i -E '/^oras[[:space:]]*$/s/^/#/' "$REQUIREMENTS_FILE"
+            sed -i -E '/^oras[[:space:]]*#/s/^/#/' "$REQUIREMENTS_FILE"
 
             # Remove any previous attempts to add different relative/absolute paths (optional, for cleanup)
-            # Use | as delimiter for sed
-            # Cleanup for editable paths
-            sed -i -E '\|^-e /home/runner/work/armbian-baker/armbian-baker/oras-py-local|d' "$REQUIREMENTS_FILE"
-            sed -i -E '\|^-e \.\./oras-py-local|d' "$REQUIREMENTS_FILE"
-            sed -i -E '\|^-e \./oras-py-local|d' "$REQUIREMENTS_FILE"
-            sed -i -E '\|^-e /armbian/oras-py-local|d' "$REQUIREMENTS_FILE"
-            sed -i -E '\|^-e build/oras-py-local|d' "$REQUIREMENTS_FILE" # Cleanup for -e current path
-
-            # Cleanup for direct path (non-editable) - ensure this matches the new path exactly
-            sed -i -E "\|^\${LOCAL_ORAS_PATH_FOR_REQS}\$|d" "$REQUIREMENTS_FILE"
-            # Also clean up the previous absolute path attempt /armbian/oras-py-local
-            sed -i -E '\|^\/armbian\/oras-py-local$|d' "$REQUIREMENTS_FILE"
+            # Clean up various possible previous attempts
+            grep -v "^-e.*oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
+            grep -v "^build/oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
+            grep -v "^/armbian/oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
 
 
             # Add the local install path (not editable)
