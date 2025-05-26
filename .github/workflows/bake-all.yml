@@ -287,13 +287,27 @@ jobs:
             exit 1 # Fail early if critical files are missing
           fi
 
+      - name: Debug: Verify directory structure for Docker mount
+        run: |
+          echo "Current working directory: ${PWD}"
+          echo "Listing contents of build directory:"
+          ls -la build/
+          echo "Checking if build/oras-py-local exists:"
+          if [ -d "build/oras-py-local" ]; then
+            echo "✓ build/oras-py-local directory exists"
+            echo "Contents of build/oras-py-local:"
+            ls -la build/oras-py-local/
+          else
+            echo "✗ build/oras-py-local directory does NOT exist"
+          fi
+
       - name: Patch requirements.txt for local oras-py
         run: |
           REQUIREMENTS_FILE="build/requirements.txt"
           # The build directory is mounted as /armbian in the Docker container
           # So build/oras-py-local becomes /armbian/oras-py-local inside the container
-          # Use file:// URL format for local path installation
-          LOCAL_ORAS_PATH_FOR_REQS="file:///armbian/oras-py-local"
+          # Use relative path from the requirements.txt location
+          LOCAL_ORAS_PATH_FOR_REQS="./oras-py-local"
 
           if [ -f "$REQUIREMENTS_FILE" ]; then
             echo "Original $REQUIREMENTS_FILE content:"
@@ -312,9 +326,11 @@ jobs:
             grep -v "^build/oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
             grep -v "^/armbian/oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
             grep -v "^file://.*oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
+            grep -v "^\\./oras-py-local" "$REQUIREMENTS_FILE" > "${REQUIREMENTS_FILE}.tmp" && mv "${REQUIREMENTS_FILE}.tmp" "$REQUIREMENTS_FILE" || true
 
-            # Add the local install path using file:// URL format
-            # Ensure it's added only once and matches the whole line
+            # Add the local install path using relative path from requirements.txt location
+            # Since requirements.txt is in /armbian/ and oras-py-local is in /armbian/oras-py-local
+            # we can use ./oras-py-local as a relative path
             if ! grep -qFx -- "$LOCAL_ORAS_PATH_FOR_REQS" "$REQUIREMENTS_FILE"; then
               echo "$LOCAL_ORAS_PATH_FOR_REQS" >> "$REQUIREMENTS_FILE"
               echo "Added local oras-py to $REQUIREMENTS_FILE: $LOCAL_ORAS_PATH_FOR_REQS"
