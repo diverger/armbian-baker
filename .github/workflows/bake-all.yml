@@ -345,6 +345,75 @@ jobs:
             exit 1
           fi
 
+      - name: Add debug script for pip editable install
+        run: |
+          # Create a debug script that will be executed inside the Docker container
+          cat > build/debug-pip-install.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          echo "=== DEBUG: pip editable install troubleshooting ==="
+          echo "Current working directory: $(pwd)"
+          echo "Current user: $(whoami)"
+          echo "Python version: $(python3 --version)"
+          echo "Pip version: $(python3 -m pip --version)"
+
+          echo "Contents of current directory:"
+          ls -la
+
+          echo "Checking if oras-py-local directory exists:"
+          if [ -d "./oras-py-local" ]; then
+            echo "✓ ./oras-py-local directory exists"
+            echo "Contents of ./oras-py-local:"
+            ls -la ./oras-py-local/
+            echo "Checking for Python package files:"
+            [ -f "./oras-py-local/setup.py" ] && echo "✓ setup.py found" || echo "✗ setup.py not found"
+            [ -f "./oras-py-local/pyproject.toml" ] && echo "✓ pyproject.toml found" || echo "✗ pyproject.toml not found"
+            if [ -f "./oras-py-local/setup.py" ]; then
+              echo "Contents of setup.py (first 20 lines):"
+              head -n 20 "./oras-py-local/setup.py"
+            fi
+          else
+            echo "✗ ./oras-py-local directory does NOT exist"
+          fi
+
+          echo "Checking requirements.txt:"
+          if [ -f "./requirements.txt" ]; then
+            echo "Contents of requirements.txt:"
+            cat ./requirements.txt
+            echo "Lines containing oras:"
+            grep -n "oras" ./requirements.txt || echo "No oras lines found"
+          else
+            echo "✗ requirements.txt not found"
+          fi
+
+          echo "Testing pip install commands:"
+          echo "1. Testing basic pip install of oras-py-local:"
+          if python3 -m pip install --dry-run ./oras-py-local 2>&1; then
+            echo "✓ Basic install would work"
+          else
+            echo "✗ Basic install would fail"
+          fi
+
+          echo "2. Testing editable pip install of oras-py-local:"
+          if python3 -m pip install --dry-run -e ./oras-py-local 2>&1; then
+            echo "✓ Editable install would work"
+          else
+            echo "✗ Editable install would fail"
+          fi
+
+          echo "3. Testing absolute path editable install:"
+          ABSOLUTE_PATH="$(pwd)/oras-py-local"
+          echo "Absolute path: $ABSOLUTE_PATH"
+          if python3 -m pip install --dry-run -e "$ABSOLUTE_PATH" 2>&1; then
+            echo "✓ Absolute path editable install would work"
+          else
+            echo "✗ Absolute path editable install would fail"
+          fi
+
+          echo "=== END DEBUG ==="
+          EOF
+          chmod +x build/debug-pip-install.sh
+
       - name: Prepare Info JSON and Matrices
         id: prepare-matrix
         run: |
@@ -361,6 +430,7 @@ jobs:
 
           cd build
 
+          # Add debug environment variable to trigger our debug script
           bash ./compile.sh \
             gha-matrix armbian-images \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
@@ -374,6 +444,7 @@ jobs:
             CHECK_OCI=${{ env.CHECK_OCI }} \
             TARGETS_FILENAME=${{ env.TARGETS_FILE }} \
             SKIP_IMAGES=${{ github.event.inputs.skip_images || 'no'}} \
+            DEBUG_PIP_INSTALL=yes \
             ${{env.EXTRA_PARAMS_ALL_BUILDS}} SHARE_LOG=no
 
       - name: "Logs: ${{ steps.prepare-matrix.outputs.logs_url }}"
