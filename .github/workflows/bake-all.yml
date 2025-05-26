@@ -264,6 +264,39 @@ jobs:
           username: "${{ github.actor }}" # GitHub username or org
           password: ${{ env.GHCR_TOKEN }}  # GitHub actions builtin token. repo has to have pkg access.
 
+      - name: Checkout patched oras-py
+        uses: actions/checkout@v4
+        with:
+          repository: 'diverger/oras-py'
+          ref: 'develop'
+          path: oras-py-local # This will checkout to ${GITHUB_WORKSPACE}/oras-py-local
+
+      - name: Patch requirements.txt for local oras-py
+        run: |
+          REQUIREMENTS_FILE="build/requirements.txt" # Path to requirements.txt within the armbian-build checkout
+          LOCAL_ORAS_PATH="../oras-py-local" # Path to local oras relative to the 'build' directory
+
+          if [ -f "$REQUIREMENTS_FILE" ]; then
+            echo "Original $REQUIREMENTS_FILE:"
+            cat "$REQUIREMENTS_FILE"
+
+            # Comment out any existing 'oras' lines
+            sed -i -E '/^oras(==|>=|<=)?/s/^/#/' "$REQUIREMENTS_FILE"
+
+            # Add the local editable install path for oras-py
+            # Ensure it's added only once if the script runs multiple times (though unlikely for this step)
+            if ! grep -q "$LOCAL_ORAS_PATH" "$REQUIREMENTS_FILE"; then
+              echo "-e $LOCAL_ORAS_PATH" >> "$REQUIREMENTS_FILE"
+            fi
+
+            echo "Patched $REQUIREMENTS_FILE to use local oras-py:"
+            cat "$REQUIREMENTS_FILE"
+          else
+            echo "Error: $REQUIREMENTS_FILE not found!"
+            exit 1
+          fi
+        shell: bash
+
       - name: Prepare Info JSON and Matrices
         id: prepare-matrix
         run: |
