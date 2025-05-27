@@ -129,12 +129,19 @@ concurrency:
 
 jobs:
 
-  version_prep:
-    name: "Determine version"
+  build_prep:
+    name: "Do preparation works"
     if: ${{ github.actor == 'diverger' }}
     runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     # runs-on: ubuntu-latest
     steps:
+      - name: Authenticate to Huawei Cloud
+        uses: huaweicloud/auth-action@v1.1.0
+        with:
+          access_key_id: ${{ secrets.OBS_KEY_ID }}
+          secret_access_key: ${{ secrets.OBS_KEY_SECRET }}
+          region: ${{ secrets.OBS_REGION }}
+
       - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
         uses: actions/checkout@v4
         if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
@@ -197,7 +204,7 @@ jobs:
   matrix_prep:
     name: "JSON matrix: 17/16 :: 17 artifact chunks, 16 image chunks"
     if: ${{ github.actor == 'diverger' }}
-    needs: [ version_prep ]
+    needs: [ build_prep ]
     runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     steps:
 
@@ -376,7 +383,7 @@ jobs:
             gha-matrix armbian-images \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            REVISION="${{ needs.version_prep.outputs.version }}" \
+            REVISION="${{ needs.build_prep.outputs.version }}" \
             BETA=${{ env.NIGHTLY_BUILD }} \
             CLEAN_INFO=yes \
             CLEAN_MATRIX=yes \
@@ -405,8 +412,8 @@ jobs:
     outputs:
       # not related to matrix
       build-sha1: ${{ steps.latest-commit.outputs.sha1 }}
-      version: ${{ needs.version_prep.outputs.version }}
-      release_tag: ${{ needs.version_prep.outputs.release_tag }}
+      version: ${{ needs.build_prep.outputs.version }}
+      release_tag: ${{ needs.build_prep.outputs.release_tag }}
 
        # artifacts-1 of 17
       artifacts-chunk-json-1: ${{ steps.prepare-matrix.outputs.artifacts-chunk-json-1 }}
@@ -2262,6 +2269,15 @@ jobs:
         with:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I1' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
+
+      # - name: Upload to Huawei Cloud OBS
+      #   uses: huaweicloud/obs-helper@v1.0.0
+      #   with:
+      #     bucket_name: ${{ secrets.OBS_BUCKET }}
+      #     local_file_path: 'src1/src2/test1.txt'
+      #     obs_file_path: 'test1.txt'
+      #     operation_type: 'upload'
+
 
   build-images-chunk-2:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
