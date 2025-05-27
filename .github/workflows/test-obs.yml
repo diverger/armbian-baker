@@ -18,7 +18,7 @@ jobs:
           region: ${{ secrets.OBS_REGION }}
 
       - name: Upload to OBS
-        uses: huaweicloud/obs-helper@v1.0.0
+        uses: diverger/gh-action-obs-helper@main
         with:
           bucket_name: ${{ secrets.OBS_BUCKET }}
           local_file_path: '.github/*'
