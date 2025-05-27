@@ -21,7 +21,7 @@ jobs:
         uses: diverger/gh-action-obs-helper@main
         with:
           bucket_name: ${{ secrets.OBS_BUCKET }}
-          local_file_path: '.github/*'
+          local_file_path: '.github/**'
           include_self_folder: true
           operation_type: 'upload'
 
