@@ -140,5 +140,5 @@ jobs:
           armbian_pgp_key: ${{ secrets.GPG_KEY }}
           armbian_pgp_password: ${{ secrets.GPG_KEY_PASSPHRASE }}
           release_tag: ${{ inputs.release_tag }}
-          oss_key_id: ${{ secrets.OSS_KEY_ID }}
-          oss_key_secret: ${{ secrets.OSS_KEY_SECRET }}
+          oss_key_id: ${{ secrets.OSS_ACCESS_KEY }}
+          oss_key_secret: ${{ secrets.OSS_SECRET_KEY }}

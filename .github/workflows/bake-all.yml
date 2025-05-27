@@ -2239,8 +2239,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -2388,8 +2388,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -2537,8 +2537,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -2686,8 +2686,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -2835,8 +2835,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -2984,8 +2984,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -3133,8 +3133,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -3282,8 +3282,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -3431,8 +3431,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -3580,8 +3580,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -3729,8 +3729,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -3878,8 +3878,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -4027,8 +4027,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -4176,8 +4176,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -4325,8 +4325,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -4474,8 +4474,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -4600,8 +4600,8 @@ jobs:
         id: upload_to_oss
         uses: tvrcgo/oss-action@master
         with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          key-id: ${{ secrets.OSS_ACCESS_KEY }}
+          key-secret: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
