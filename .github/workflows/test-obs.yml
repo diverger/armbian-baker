@@ -1,0 +1,27 @@
+name: Test OBS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Huawei Cloud
+        uses: huaweicloud/auth-action@v1.1.0
+        with:
+          access_key_id: ${{ secrets.OBS_KEY_ID }}
+          secret_access_key: ${{ secrets.OBS_KEY_SECRET }}
+          region: ${{ secrets.OBS_REGION }}
+
+      - name: Upload to OBS
+        uses: huaweicloud/obs-helper@v1.0.0
+        with:
+          bucket_name: ${{ secrets.OBS_BUCKET }}
+          local_file_path: '.github/**'
+          obs_file_path: 'test1.txt'
+          operation_type: 'upload'
+
