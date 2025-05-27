@@ -22,6 +22,6 @@ jobs:
         with:
           bucket_name: ${{ secrets.OBS_BUCKET }}
           local_file_path: '.github/**'
-          obs_file_path: 'test1.txt'
+          include_self_folder: true
           operation_type: 'upload'
 
