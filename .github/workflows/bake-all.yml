@@ -2264,6 +2264,40 @@ jobs:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I1' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
 
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I1' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+
   build-images-chunk-2:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
@@ -2412,6 +2446,40 @@ jobs:
         with:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I2' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
+
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I2' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
 
   build-images-chunk-3:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -2562,6 +2630,40 @@ jobs:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I3' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
 
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I3' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+
   build-images-chunk-4:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
@@ -2710,6 +2812,40 @@ jobs:
         with:
           name: "oss-urls-${{ matrix.desc || matrix.id || 'Empty I4' }}"
           path: "oss-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I4' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
 
   build-images-chunk-5:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -2860,6 +2996,40 @@ jobs:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I5' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
 
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I5' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+
   build-images-chunk-6:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
@@ -3008,6 +3178,40 @@ jobs:
         with:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I6' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
+
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I6' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
 
   build-images-chunk-7:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -3158,6 +3362,40 @@ jobs:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I7' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
 
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I7' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+
   build-images-chunk-8:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
@@ -3306,6 +3544,40 @@ jobs:
         with:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I8' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
+
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I8' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
 
   build-images-chunk-9:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -3456,6 +3728,40 @@ jobs:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I9' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
 
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I9' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+
   build-images-chunk-10:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
@@ -3604,6 +3910,40 @@ jobs:
         with:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I10' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
+
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I10' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
 
   build-images-chunk-11:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -3754,6 +4094,40 @@ jobs:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I11' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
 
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I11' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+
   build-images-chunk-12:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
@@ -3902,6 +4276,40 @@ jobs:
         with:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I12' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
+
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I12' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
 
   build-images-chunk-13:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -4052,6 +4460,40 @@ jobs:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I13' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
 
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I13' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+
   build-images-chunk-14:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
@@ -4200,6 +4642,40 @@ jobs:
         with:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I14' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
+
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I14' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
 
   build-images-chunk-15:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -4350,6 +4826,40 @@ jobs:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I15' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
 
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I15' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+
   build-images-chunk-16:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
     timeout-minutes: 240
@@ -4498,6 +5008,40 @@ jobs:
         with:
           name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I16' }}
           path: oss-urls/image-urls-${{ matrix.id }}.txt
+
+      - name: Upload to OBS
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        timeout-minutes: 60
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          operation: upload
+          local_path: ./output/images/**
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          exclude: ""
+          preserve_structure: true
+          progress: true
+
+      - name: Report OBS uploading status
+        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        shell: bash
+        run: |
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          mkdir -p obs-urls
+          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+
+      - name: Upload OBS URL
+        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I16' }}"
+          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
 
   # ------ publish packages to repository -------
 
@@ -4669,8 +5213,21 @@ jobs:
       - name: Combine all OSS URLs
         run: |
           mkdir -p oss-urls
-          cat combined-oss-urls/* > oss-urls/image-urls.txt
-          echo "Combined OSS URLs into oss-urls/image-urls.txt"
+          cat combined-oss-urls/* > oss-urls/oss-urls.txt
+          echo "Combined OSS URLs into oss-urls/oss-urls.txt"
+
+      - name: Download all OBS URL artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: obs-urls-*
+          merge-multiple: true
+          path: combined-obs-urls
+
+      - name: Combine all OBS URLs
+        run: |
+          mkdir -p obs-urls
+          cat combined-obs-urls/* > obs-urls/obs-urls.txt
+          echo "Combined OBS URLs into obs-urls/obs-urls.txt"
 
       # - name: Publish to Github Releases
       #   uses: xresloader/upload-to-github-release@v1
@@ -4693,7 +5250,7 @@ jobs:
           owner: ${{ github.actor }}
           repo: 'armbian-custom'
           tag: ${{ env.RELEASE_TAG }}
-          artifacts: 'release.txt,oss-urls/image-urls.txt'
+          artifacts: 'release.txt,oss-urls/oss-urls.txt,obs-urls/obs-urls.txt'
           artifactContentType: 'text/plain'
           allowUpdates: true
           replacesArtifacts: true
