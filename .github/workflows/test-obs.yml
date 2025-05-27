@@ -21,7 +21,7 @@ jobs:
         uses: huaweicloud/obs-helper@v1.0.0
         with:
           bucket_name: ${{ secrets.OBS_BUCKET }}
-          local_file_path: '.github/**'
+          local_file_path: '.github/*'
           include_self_folder: true
           operation_type: 'upload'
 
