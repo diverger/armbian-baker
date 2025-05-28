@@ -2279,6 +2279,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -2462,6 +2463,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -2645,6 +2647,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -2828,6 +2831,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -3011,6 +3015,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -3194,6 +3199,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -3377,6 +3383,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -3560,6 +3567,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -3743,6 +3751,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -3926,6 +3935,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -4109,6 +4119,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -4292,6 +4303,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -4475,6 +4487,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -4658,6 +4671,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -4841,6 +4855,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
@@ -5024,6 +5039,7 @@ jobs:
           obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
           exclude: ""
           preserve_structure: true
+          checksum_validation: true
           progress: true
 
       - name: Report OBS uploading status
