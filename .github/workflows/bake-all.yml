@@ -2288,7 +2288,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -2472,7 +2472,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -2656,7 +2656,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -2840,7 +2840,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -3024,7 +3024,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -3208,7 +3208,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -3392,7 +3392,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -3576,7 +3576,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -3760,7 +3760,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -3944,7 +3944,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -4128,7 +4128,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -4312,7 +4312,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -4496,7 +4496,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -4680,7 +4680,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -4864,7 +4864,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -5048,7 +5048,7 @@ jobs:
         if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_url }}"
+          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
           echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
@@ -5156,7 +5156,7 @@ jobs:
           sudo chown -R $USER:$USER output/.
 
       # Upload the parts too
-      - name: Upload to oss
+      - name: Upload to OSS
         timeout-minutes: 60
         if: ${{ (github.event.inputs.skip_images || 'no') == 'no' }}
         id: upload_to_oss
@@ -5168,6 +5168,26 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: ./output/debs***:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/partial/
+
+      # TODO: In official version, next will inform the armbian/os repo to update the repository, what should we do?
+
+      - name: "Logs debs-to-repo-download: ${{ steps.download-debs.outputs.logs_url }}"
+        run: |
+          echo "Logs debs-to-repo-download: ${{ steps.download-debs.outputs.logs_url }}"
+
+      # Upload the parts to OBS
+      - name: Upload to OBS
+        timeout-minutes: 60
+        if: ${{ (github.event.inputs.skip_images || 'no') == 'no' }}
+        id: upload_to_obs
+        uses: diverger/gh-obs-helper@v1
+        with:
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
+          region: ${{ secrets.OBS_REGION }}
+          bucket: ${{ secrets.OBS_BUCKET }}
+          local_path: ./output/debs***
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/partial/
 
       # TODO: In official version, next will inform the armbian/os repo to update the repository, what should we do?
 
