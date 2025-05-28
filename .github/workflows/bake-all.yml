@@ -2270,8 +2270,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -2454,8 +2454,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -2638,8 +2638,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -2822,8 +2822,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -3006,8 +3006,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -3190,8 +3190,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -3374,8 +3374,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -3558,8 +3558,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -3742,8 +3742,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -3926,8 +3926,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -4110,8 +4110,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -4294,8 +4294,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -4478,8 +4478,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -4662,8 +4662,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -4846,8 +4846,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
@@ -5030,8 +5030,8 @@ jobs:
         id: upload_to_obs
         uses: diverger/gh-obs-helper@v1
         with:
-          access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          secret_key: ${{ secrets.OSS_SECRET_KEY }}
+          access_key: ${{ secrets.OBS_ACCESS_KEY }}
+          secret_key: ${{ secrets.OBS_SECRET_KEY }}
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
