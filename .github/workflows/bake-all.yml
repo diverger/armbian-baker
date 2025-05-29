@@ -2295,7 +2295,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I1' }}"
@@ -2479,7 +2479,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I2' }}"
@@ -2663,7 +2663,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I3' }}"
@@ -2847,7 +2847,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I4' }}"
@@ -3031,7 +3031,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I5' }}"
@@ -3215,7 +3215,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I6' }}"
@@ -3399,7 +3399,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I7' }}"
@@ -3583,7 +3583,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I8' }}"
@@ -3767,7 +3767,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I9' }}"
@@ -3951,7 +3951,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I10' }}"
@@ -4135,7 +4135,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I11' }}"
@@ -4319,7 +4319,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I12' }}"
@@ -4503,7 +4503,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I13' }}"
@@ -4687,7 +4687,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I14' }}"
@@ -4871,7 +4871,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I15' }}"
@@ -5055,7 +5055,7 @@ jobs:
           echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
 
       - name: Upload OBS URL
-        if: ${{ always() && ( steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url )}}
+        if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
           name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I16' }}"
