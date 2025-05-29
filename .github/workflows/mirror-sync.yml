@@ -65,7 +65,7 @@ jobs:
             git checkout -B $branch origin/$branch
 
             # Push to mirror
-            git push mirror $branch --force-with-lease
+            git push mirror $branch --force
 
             echo "✅ Synced branch: $branch"
           done
@@ -110,7 +110,7 @@ jobs:
       - name: Sync GitHub Releases
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.MIRROR_TOKEN }}
+          github-token: ${{ secrets.GH_ACCESS_TOKEN }}
           script: |
             const sourceOwner = context.repo.owner;
             const sourceRepo = context.repo.repo;
