@@ -1,4 +1,4 @@
-name: Advanced Mirror Sync
+name: Mirror Sync
 
 on:
   push:
