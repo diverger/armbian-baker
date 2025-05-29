@@ -54,7 +54,8 @@ jobs:
           echo "🔄 Syncing all branches..."
 
           # Fetch everything from origin
-          git fetch origin --all --prune
+          git fetch origin --prune
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
 
           # Get all branches from origin
           for branch in $(git branch -r | grep 'origin/' | grep -v 'origin/HEAD' | sed 's/origin\///'); do
@@ -73,7 +74,7 @@ jobs:
         if: ${{ github.event.inputs.sync_type != 'branches_only' }}
         run: |
           echo "🏷️ Syncing all tags..."
-          git fetch origin --tags --prune --prune-tags
+          git fetch origin --tags --prune-tags
           git push mirror --tags --force
 
       - name: Clean up deleted branches on mirror
