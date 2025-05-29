@@ -22,7 +22,7 @@ on:
           - 'tags_only'
 
 env:
-  MIRROR_REPO: ${{ secrets.MIRROR_REPO }}  # Format: username/repo-name
+  MIRROR_REPO: ${{ secrets.GH_TOKEN }}  # Format: username/repo-name
 
 jobs:
   sync-repository:
