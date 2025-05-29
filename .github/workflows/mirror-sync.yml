@@ -22,7 +22,7 @@ on:
           - 'tags_only'
 
 env:
-  MIRROR_REPO: ${{ secrets.GH_TOKEN }}  # Format: username/repo-name
+  MIRROR_REPO: ${{ secrets.MIRROR_REPO }}  # Format: username/repo-name
 
 jobs:
   sync-repository:
@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
 
       - name: Configure Git
         run: |
@@ -43,7 +43,7 @@ jobs:
       - name: Setup mirror remote
         run: |
           echo "Setting up mirror remote for: $MIRROR_REPO"
-          git remote add mirror https://${{ secrets.MIRROR_TOKEN }}@github.com/$MIRROR_REPO.git
+          git remote add mirror https://${{ secrets.GH_ACCESS_TOKEN }}@github.com/$MIRROR_REPO.git
 
           # Test connection
           git ls-remote mirror > /dev/null && echo "✅ Mirror remote accessible" || echo "❌ Mirror remote not accessible"
