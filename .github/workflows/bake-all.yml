@@ -2263,8 +2263,8 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || 'Empty I1' }}
-          path: oss-urls/image-urls-I1.txt
+          name: "oss-urls-I1"
+          path: "oss-urls/image-urls-I1.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -2298,7 +2298,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I1' }}"
+          name: "obs-urls-I1"
           path: "obs-urls/image-urls-I1.txt"
 
   build-images-chunk-2:
@@ -2447,8 +2447,8 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || 'Empty I2' }}
-          path: oss-urls/image-urls-I2.txt
+          name: "oss-urls-I2"
+          path: "oss-urls/image-urls-I2.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -2631,8 +2631,8 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I3' }}"
-          path: oss-urls/image-urls-I3.txt
+          name: "oss-urls-I3"
+          path: "oss-urls/image-urls-I3.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -2815,7 +2815,7 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I4' }}"
+          name: "oss-urls-I4"
           path: "oss-urls/image-urls-I4.txt"
 
       - name: Upload to OBS
@@ -2999,7 +2999,7 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I5' }}"
+          name: "oss-urls-I5"
           path: "oss-urls/image-urls-I5.txt"
 
       - name: Upload to OBS
@@ -3183,7 +3183,7 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I6' }}"
+          name: "oss-urls-I6"
           path: "oss-urls/image-urls-I6.txt"
 
       - name: Upload to OBS
@@ -3367,7 +3367,7 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I7' }}"
+          name: "oss-urls-I7"
           path: "oss-urls/image-urls-I7.txt"
 
       - name: Upload to OBS
@@ -3551,7 +3551,7 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I8' }}"
+          name: "oss-urls-I8"
           path: "oss-urls/image-urls-I8.txt"
 
       - name: Upload to OBS
@@ -3735,8 +3735,8 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || 'Empty I9' }}
-          path: oss-urls/image-urls-I9.txt
+          name: "oss-urls-I9"
+          path: "oss-urls/image-urls-I9.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -3919,8 +3919,8 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I10' }}"
-          path: oss-urls/image-urls-I10.txt
+          name: "oss-urls-I10"
+          path: "oss-urls/image-urls-I10.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -4103,8 +4103,8 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I11' }}"
-          path: oss-urls/image-urls-I11.txt
+          name: "oss-urls-I11"
+          path: "oss-urls/image-urls-I11.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -4287,8 +4287,8 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I12' }}"
-          path: oss-urls/image-urls-I12.txt
+          name: "oss-urls-I12"
+          path: "oss-urls/image-urls-I12.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -4471,8 +4471,8 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I13' }}"
-          path: oss-urls/image-urls-I13.txt
+          name: "oss-urls-I13"
+          path: "oss-urls/image-urls-I13.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -4655,8 +4655,8 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I14' }}"
-          path: oss-urls/image-urls-I14.txt
+          name: "oss-urls-I14"
+          path: "oss-urls/image-urls-I14.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -4839,8 +4839,8 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I15' }}"
-          path: oss-urls/image-urls-I15.txt
+          name: "oss-urls-I15"
+          path: "oss-urls/image-urls-I15.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -5023,8 +5023,8 @@ jobs:
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || 'Empty I16' }}"
-          path: oss-urls/image-urls-I16.txt
+          name: "oss-urls-I16"
+          path: "oss-urls/image-urls-I16.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
