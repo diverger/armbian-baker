@@ -2288,11 +2288,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I1.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I1.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I1.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I1.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -2472,11 +2485,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I2.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I2.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I2.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I2.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -2656,11 +2682,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I3.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I3.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I3.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I3.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -2840,11 +2879,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I4.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I4.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I4.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I4.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -3024,11 +3076,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I5.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I5.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I5.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I5.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -3208,11 +3273,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I6.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I6.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I6.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I6.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -3392,11 +3470,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I7.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I7.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I7.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I7.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -3576,11 +3667,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I8.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I8.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I8.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I8.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -3760,11 +3864,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I9.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I9.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I9.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I9.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -3944,11 +4061,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I10.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I10.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I10.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I10.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -4128,11 +4258,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I11.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I11.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I11.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I11.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -4312,11 +4455,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I12.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I12.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I12.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I12.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -4496,11 +4652,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I13.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I13.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I13.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I13.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -4680,11 +4849,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I14.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I14.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I14.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I14.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -4864,11 +5046,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I15.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I15.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I15.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I15.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
@@ -5048,11 +5243,24 @@ jobs:
         if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
-          OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
-          echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
+          # Get the JSON array of URLs safely
+          OBS_URLS_JSON=$(cat << 'EOF'
+          ${{ steps.upload_to_obs.outputs.upload_urls }}
+          EOF
+          )
+
+          echo "Successfully uploaded to OBS. Processing URLs..."
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-I16.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-I16.txt"
+
+          # Parse JSON and process each URL
+          echo "$OBS_URLS_JSON" | jq -r '.[]' | while read -r url; do
+            echo "OBS URL: $url"
+            echo "$url" >> "obs-urls/image-urls-I16.txt"
+          done
+
+          # Show summary
+          URL_COUNT=$(echo "$OBS_URLS_JSON" | jq -r '. | length')
+          echo "Total $URL_COUNT OBS URLs have been written to obs-urls/image-urls-I16.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
