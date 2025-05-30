@@ -2285,7 +2285,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -2469,7 +2469,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -2653,7 +2653,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -2837,7 +2837,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -3021,7 +3021,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -3205,7 +3205,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -3389,7 +3389,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -3573,7 +3573,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -3757,7 +3757,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -3941,7 +3941,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -4125,7 +4125,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -4309,7 +4309,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -4493,7 +4493,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -4677,7 +4677,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -4861,7 +4861,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
@@ -5045,7 +5045,7 @@ jobs:
           progress: true
 
       - name: Report OBS uploading status
-        if: ${{ steps.upload_to_obs.conclusion == 'success' && steps.upload_to_obs.outputs.first_upload_url }}
+        if: ${{ steps.upload_to_obs.outputs.first_upload_url }}
         shell: bash
         run: |
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
