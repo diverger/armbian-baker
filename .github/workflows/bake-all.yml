@@ -132,7 +132,7 @@ concurrency:
 jobs:
 
   build_prep:
-    name: "Do preparation works"
+    name: "Do preparations"
     if: ${{ github.actor == 'diverger' }}
     runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
     # runs-on: ubuntu-latest
