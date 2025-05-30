@@ -2482,7 +2482,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I2' }}"
+          name: "obs-urls-I2"
           path: "obs-urls/image-urls-I2.txt"
 
   build-images-chunk-3:
@@ -2666,7 +2666,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I3' }}"
+          name: "obs-urls-I3"
           path: "obs-urls/image-urls-I3.txt"
 
   build-images-chunk-4:
@@ -2850,7 +2850,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I4' }}"
+          name: "obs-urls-I4"
           path: "obs-urls/image-urls-I4.txt"
 
   build-images-chunk-5:
@@ -3034,7 +3034,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I5' }}"
+          name: "obs-urls-I5"
           path: "obs-urls/image-urls-I5.txt"
 
   build-images-chunk-6:
@@ -3218,7 +3218,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I6' }}"
+          name: "obs-urls-I6"
           path: "obs-urls/image-urls-I6.txt"
 
   build-images-chunk-7:
@@ -3402,7 +3402,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I7' }}"
+          name: "obs-urls-I7"
           path: "obs-urls/image-urls-I7.txt"
 
   build-images-chunk-8:
@@ -3586,7 +3586,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I8' }}"
+          name: "obs-urls-I8"
           path: "obs-urls/image-urls-I8.txt"
 
   build-images-chunk-9:
@@ -3770,7 +3770,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I9' }}"
+          name: "obs-urls-I9"
           path: "obs-urls/image-urls-I9.txt"
 
   build-images-chunk-10:
@@ -3954,7 +3954,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I10' }}"
+          name: "obs-urls-I10"
           path: "obs-urls/image-urls-I10.txt"
 
   build-images-chunk-11:
@@ -4138,7 +4138,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I11' }}"
+          name: "obs-urls-I11"
           path: "obs-urls/image-urls-I11.txt"
 
   build-images-chunk-12:
@@ -4322,7 +4322,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I12' }}"
+          name: "obs-urls-I12"
           path: "obs-urls/image-urls-I12.txt"
 
   build-images-chunk-13:
@@ -4506,7 +4506,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I13' }}"
+          name: "obs-urls-I13"
           path: "obs-urls/image-urls-I13.txt"
 
   build-images-chunk-14:
@@ -4690,7 +4690,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I14' }}"
+          name: "obs-urls-I14"
           path: "obs-urls/image-urls-I14.txt"
 
   build-images-chunk-15:
@@ -4874,7 +4874,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I15' }}"
+          name: "obs-urls-I15"
           path: "obs-urls/image-urls-I15.txt"
 
   build-images-chunk-16:
@@ -5058,7 +5058,7 @@ jobs:
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || 'Empty I16' }}"
+          name: "obs-urls-I16"
           path: "obs-urls/image-urls-I16.txt"
 
   # ------ publish packages to repository -------
