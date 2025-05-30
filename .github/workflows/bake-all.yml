@@ -2256,15 +2256,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I1.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I1.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I1' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: oss-urls-${{ matrix.desc || 'Empty I1' }}
+          path: oss-urls/image-urls-I1.txt
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -2291,15 +2291,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I1.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I1.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I1' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I1' }}"
+          path: "obs-urls/image-urls-I1.txt"
 
   build-images-chunk-2:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -2440,15 +2440,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I2.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I2.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I2' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: oss-urls-${{ matrix.desc || 'Empty I2' }}
+          path: oss-urls/image-urls-I2.txt
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -2475,15 +2475,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I2.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I2.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I2' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I2' }}"
+          path: "obs-urls/image-urls-I2.txt"
 
   build-images-chunk-3:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -2624,15 +2624,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I3.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I3.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I3' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I3' }}"
+          path: oss-urls/image-urls-I3.txt
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -2659,15 +2659,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I3.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I3.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I3' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I3' }}"
+          path: "obs-urls/image-urls-I3.txt"
 
   build-images-chunk-4:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -2808,15 +2808,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I4.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I4.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: "oss-urls-${{ matrix.desc || matrix.id || 'Empty I4' }}"
-          path: "oss-urls/image-urls-${{ matrix.id }}.txt"
+          name: "oss-urls-${{ matrix.desc || 'Empty I4' }}"
+          path: "oss-urls/image-urls-I4.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -2843,15 +2843,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I4.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I4.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I4' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I4' }}"
+          path: "obs-urls/image-urls-I4.txt"
 
   build-images-chunk-5:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -2992,15 +2992,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I5.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I5.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I5' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I5' }}"
+          path: "oss-urls/image-urls-I5.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -3027,15 +3027,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I5.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I5.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I5' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I5' }}"
+          path: "obs-urls/image-urls-I5.txt"
 
   build-images-chunk-6:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -3176,15 +3176,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I6.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I6.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I6' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I6' }}"
+          path: "oss-urls/image-urls-I6.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -3211,15 +3211,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I6.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I6.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I6' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I6' }}"
+          path: "obs-urls/image-urls-I6.txt"
 
   build-images-chunk-7:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -3360,15 +3360,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I7.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I7.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I7' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I7' }}"
+          path: "oss-urls/image-urls-I7.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -3395,15 +3395,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I7.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I7.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I7' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I7' }}"
+          path: "obs-urls/image-urls-I7.txt"
 
   build-images-chunk-8:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -3544,15 +3544,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I8.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I8.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I8' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I8' }}"
+          path: "oss-urls/image-urls-I8.txt"
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -3579,15 +3579,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I8.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I8.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I8' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I8' }}"
+          path: "obs-urls/image-urls-I8.txt"
 
   build-images-chunk-9:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -3728,15 +3728,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I9.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I9.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I9' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: oss-urls-${{ matrix.desc || 'Empty I9' }}
+          path: oss-urls/image-urls-I9.txt
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -3763,15 +3763,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I9.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I9.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I9' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I9' }}"
+          path: "obs-urls/image-urls-I9.txt"
 
   build-images-chunk-10:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -3912,15 +3912,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I10.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I10.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I10' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I10' }}"
+          path: oss-urls/image-urls-I10.txt
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -3947,15 +3947,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I10.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I10.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I10' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I10' }}"
+          path: "obs-urls/image-urls-I10.txt"
 
   build-images-chunk-11:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -4096,15 +4096,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I11.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I11.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I11' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I11' }}"
+          path: oss-urls/image-urls-I11.txt
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -4131,15 +4131,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I11.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I11.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I11' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I11' }}"
+          path: "obs-urls/image-urls-I11.txt"
 
   build-images-chunk-12:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -4280,15 +4280,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I12.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I12.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I12' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I12' }}"
+          path: oss-urls/image-urls-I12.txt
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -4315,15 +4315,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I12.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I12.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I12' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I12' }}"
+          path: "obs-urls/image-urls-I12.txt"
 
   build-images-chunk-13:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -4464,15 +4464,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I13.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I13.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I13' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I13' }}"
+          path: oss-urls/image-urls-I13.txt
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -4499,15 +4499,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I13.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I13.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I13' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I13' }}"
+          path: "obs-urls/image-urls-I13.txt"
 
   build-images-chunk-14:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -4648,15 +4648,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I14.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I14.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I14' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I14' }}"
+          path: oss-urls/image-urls-I14.txt
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -4683,15 +4683,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I14.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I14.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I14' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I14' }}"
+          path: "obs-urls/image-urls-I14.txt"
 
   build-images-chunk-15:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -4832,15 +4832,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I15.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I15.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I15' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I15' }}"
+          path: oss-urls/image-urls-I15.txt
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -4867,15 +4867,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I15.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I15.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I15' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I15' }}"
+          path: "obs-urls/image-urls-I15.txt"
 
   build-images-chunk-16:
     needs: [ "matrix_prep", "all-artifacts-ready" ]
@@ -5016,15 +5016,15 @@ jobs:
           OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
-          echo "${OSS_URL}" >> "oss-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OSS URL has been appended to oss-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OSS_URL}" >> "oss-urls/image-urls-I16.txt"
+          echo "OSS URL has been appended to oss-urls/image-urls-I16.txt"
 
       - name: Upload OSS URL
         if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
-          name: oss-urls-${{ matrix.desc || matrix.id || 'Empty I16' }}
-          path: oss-urls/image-urls-${{ matrix.id }}.txt
+          name: "oss-urls-${{ matrix.desc || 'Empty I16' }}"
+          path: oss-urls/image-urls-I16.txt
 
       - name: Upload to OBS
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
@@ -5051,15 +5051,15 @@ jobs:
           OBS_URL="${{ steps.upload_to_obs.outputs.upload_urls }}"
           echo "Successfully uploaded to OBS. URL: ${OBS_URL}"
           mkdir -p obs-urls
-          echo "${OBS_URL}" >> "obs-urls/image-urls-${{ matrix.id }}.txt"
-          echo "OBS URL has been appended to obs-urls/image-urls-${{ matrix.id }}.txt"
+          echo "${OBS_URL}" >> "obs-urls/image-urls-I16.txt"
+          echo "OBS URL has been appended to obs-urls/image-urls-I16.txt"
 
       - name: Upload OBS URL
         if: ${{ always() && steps.upload_to_obs.outputs.first_upload_url }}
         uses: actions/upload-artifact@v4
         with:
-          name: "obs-urls-${{ matrix.desc || matrix.id || 'Empty I16' }}"
-          path: "obs-urls/image-urls-${{ matrix.id }}.txt"
+          name: "obs-urls-${{ matrix.desc || 'Empty I16' }}"
+          path: "obs-urls/image-urls-I16.txt"
 
   # ------ publish packages to repository -------
 
