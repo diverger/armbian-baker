@@ -93,10 +93,10 @@ on:
 env:
 
   BUILD_REPOSITORY: "diverger/armbian-build"
-  BUILD_REF: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ref || github.event.inputs.branch || 'armbian' }}
+  BUILD_REF: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.custom_build_ref || github.event.inputs.branch || 'armbian' }}
 
   USERPATCHES_REPOSITORY: "diverger/armbian-os"
-  USERPATCHES_REF: "diverger"
+  USERPATCHES_REF: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.custom_os_ref) || 'diverger' }}
   USERPATCHES_DIR: "userpatches"
 
   # only used for nightly builds, and for 'community' and 'distribution' releases
@@ -216,6 +216,13 @@ jobs:
           clean: false
           path: build
 
+      - name: "grab the sha1 of the commit of the custom-build repo ${{ env.BUILD_REPOSITORY }}#${{ env.BUILD_REF }}"
+        id: custom-build-commit
+        run: |
+          cd build
+          echo "custom_build_sha1=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          cd ..
+
       - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
         uses: actions/checkout@v4
         with:
@@ -226,14 +233,14 @@ jobs:
           clean: false
           path: userpatches
 
-      - name: "grab the sha1 of the latest commit of the build repo ${{ env.BUILD_REPOSITORY }}#${{ env.BUILD_REF }}"
-        id: latest-commit
+      - name: "grab the sha1 of the commit of the custom-os repo ${{ env.USERPATCHES_REPOSITORY }}#${{ env.USERPATCHES_REF }}"
+        id: custom-os-commit
         run: |
-          cd build
-          echo "sha1=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          cd userpatches
+          echo "custom_os_sha1=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
           cd ..
 
-      - name: Checkout customizations
+      - name: Checkout custom repo
         if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
         uses: actions/checkout@v4
         with:
@@ -243,6 +250,13 @@ jobs:
           fetch-depth: 0
           clean: false
           path: custom
+
+      - name: "grab the sha1 of the commit of the custom repo ${{ env.CUSTOM_REP }}#${{ env.CUSTOM_REF }}"
+        id: custom-commit
+        run: |
+          cd custom
+          echo "custom_sha1=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          cd ..
 
       - name: Put userpatches in place
         run: |
@@ -355,7 +369,7 @@ jobs:
           path: |
             cache/memoize
             cache/oci/positive
-          key: ${{ runner.os }}-matrix-cache-${{ github.sha }}-${{ steps.latest-commit.outputs.sha1 }}"
+          key: ${{ runner.os }}-matrix-cache-${{ github.sha }}-${{ steps.custom-build-commit.outputs.custom_build_sha1 }}-${{ steps.custom-build-commit.outputs.custom_os_sha1 }}-${{ steps.custom-build-commit.outputs.custom_sha1 }}"
           restore-keys: |
             ${{ runner.os }}-matrix-cache-
 
@@ -416,7 +430,10 @@ jobs:
 
     outputs:
       # not related to matrix
-      build-sha1: ${{ steps.latest-commit.outputs.sha1 }}
+      custom_build_sha1: ${{ steps.custom-build-commit.outputs.custom_build_sha1 }}
+      custom_os_sha1: ${{ steps.custom-os-commit.outputs.custom_os_sha1 }}
+      custom_sha1: ${{ steps.custom-commit.outputs.custom_sha1 }}
+
       version: ${{ needs.build_prep.outputs.version }}
       release_tag: ${{ needs.build_prep.outputs.release_tag }}
 
@@ -661,7 +678,7 @@ jobs:
         uses: actions/checkout@v4 # We don't need to clone git, really. A wget would suffice for GH-hosted runners. But using clone is better for Igor-hosted runners.
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false # true is default. it *will* delete the hosts /dev if mounted inside.
@@ -751,7 +768,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -840,7 +857,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -929,7 +946,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1018,7 +1035,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1107,7 +1124,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1196,7 +1213,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1285,7 +1302,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1374,7 +1391,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1463,7 +1480,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1552,7 +1569,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1641,7 +1658,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1730,7 +1747,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1819,7 +1836,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1908,7 +1925,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1997,7 +2014,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -2086,7 +2103,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -2170,7 +2187,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false # true is default. it *will* delete the hosts /dev if mounted inside.
@@ -2370,7 +2387,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -2568,7 +2585,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -2766,7 +2783,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -2964,7 +2981,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -3162,7 +3179,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -3360,7 +3377,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -3558,7 +3575,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -3756,7 +3773,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -3954,7 +3971,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -4152,7 +4169,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -4350,7 +4367,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -4548,7 +4565,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -4746,7 +4763,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -4944,7 +4961,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -5142,7 +5159,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -5348,7 +5365,7 @@ jobs:
         uses: actions/checkout@v4 # We don't need to clone git, really. A wget would suffice for GH-hosted runners. But using clone is better for Igor-hosted runners.
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.build-sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: 0
           clean: false # true is default. it *will* delete the hosts /dev if mounted inside.
@@ -5491,6 +5508,10 @@ jobs:
         run: |
           echo "Release version: ${{ needs.matrix_prep.outputs.release_tag }}" >> release.txt
           echo "Armbian version: ${{ needs.matrix_prep.outputs.version }}" >> release.txt
+          echo "Custom build: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}" >> release.txt
+          echo "Custom os: ${{ needs.matrix_prep.outputs.custom_os_sha1 }}" >> release.txt
+          echo "Custom: ${{ needs.matrix_prep.outputs.custom_sha1 }}" >> release.txt
+          echo "Baker: ${{ github.sha }}" >> release.txt
 
       - name: Download all OSS URL artifacts
         uses: actions/download-artifact@v4
