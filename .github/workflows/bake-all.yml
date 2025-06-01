@@ -245,6 +245,7 @@ jobs:
           path: custom
 
       - name: Checkout patched oras-py
+        if: false
         uses: actions/checkout@v4
         with:
           repository: 'oras-project/oras-py'
@@ -252,6 +253,7 @@ jobs:
           path: oras-py-temp # Temporary location for oras-py
 
       - name: Put userpatches in place
+        if: false
         run: |
           mkdir -pv build/userpatches
           rsync -av userpatches/${{env.USERPATCHES_DIR}}/. build/userpatches/
@@ -291,6 +293,7 @@ jobs:
           chmod +x build/userpatches/debug-pip-install.sh
 
       - name: Verify oras-py setup for Docker
+        if: false
         shell: bash
         run: |
           echo "Verifying oras-py package structure:"
@@ -310,6 +313,7 @@ jobs:
           fi
 
       - name: Patch requirements.txt for local oras-py
+        if: false
         run: |
           # Configure requirements.txt to use the local oras-py package from userpatches
           # This allows the Docker container to access oras-py via the preserved userpatches directory
