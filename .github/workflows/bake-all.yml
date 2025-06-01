@@ -244,6 +244,12 @@ jobs:
           clean: false
           path: custom
 
+      - name: Put userpatches in place
+        run: |
+          mkdir -pv build/userpatches
+          rsync -av userpatches/${{env.USERPATCHES_DIR}}/. build/userpatches/
+          rsync -av custom/userpatches/. build/userpatches/
+
       - name: Checkout patched oras-py
         if: false
         uses: actions/checkout@v4
@@ -252,12 +258,9 @@ jobs:
           ref: '0.2.33'
           path: oras-py-temp # Temporary location for oras-py
 
-      - name: Put userpatches in place
+      - name: Put oras-py patches in place
         if: false
         run: |
-          mkdir -pv build/userpatches
-          rsync -av userpatches/${{env.USERPATCHES_DIR}}/. build/userpatches/
-          rsync -av custom/userpatches/. build/userpatches/
 
           # Configure local oras-py package for Docker container access
           # SOLUTION: Place oras-py in userpatches directory because Armbian preserves
