@@ -247,8 +247,8 @@ jobs:
       - name: Checkout patched oras-py
         uses: actions/checkout@v4
         with:
-          repository: 'diverger/oras-py'
-          ref: 'develop'
+          repository: 'oras-project/oras-py'
+          ref: '0.2.33'
           path: oras-py-temp # Temporary location for oras-py
 
       - name: Put userpatches in place
