@@ -202,7 +202,7 @@ jobs:
         run: |
           echo "version=${{ env.ARMBIAN_VERSION }}" >> $GITHUB_OUTPUT
           echo "release_tag=${{ env.RELEASE_TAG }}" >> $GITHUB_OUTPUT
-          echo "release_ver=${{ evn.RELEASE_VER }}" >> $GITHUB_OUTPUT
+          echo "release_ver=${{ env.RELEASE_VER }}" >> $GITHUB_OUTPUT
 
     outputs:
 
