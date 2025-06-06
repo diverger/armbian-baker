@@ -108,6 +108,7 @@ env:
   EXTRA_PARAMS_IMAGE: "SHARE_LOG=no "
 
   RELEASE_TAG: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) || '' }}
+  RELEASE_VER: # Will be set in build_prep job
   RELEASE_ID: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_id) || '' }}
 
   CUSTOM_REP: "diverger/armbian-custom"
@@ -172,11 +173,25 @@ jobs:
           path: downloads
           retention-days: 5
 
-      - name: 'Make release tag'
+      - name: 'Make release version/tag'
         id: make_release_tag
         run: |
           if [ -z "$RELEASE_TAG" ]; then
             echo "RELEASE_TAG=$(TZ='Asia/Shanghai' date +"%Y-%m-%d-%H-%M-%S")" >> $GITHUB_ENV
+          fi
+
+          # Compute RELEASE_VER by removing first character if it's not a digit
+          if [ -n "$RELEASE_TAG" ]; then
+            first_char="${RELEASE_TAG:0:1}"
+            if [[ "$first_char" =~ ^[0-9]$ ]]; then
+              # First character is a digit, keep the whole tag
+              echo "RELEASE_VER=$RELEASE_TAG" >> $GITHUB_ENV
+            else
+              # First character is not a digit, remove it
+              echo "RELEASE_VER=${RELEASE_TAG:1}" >> $GITHUB_ENV
+            fi
+          else
+            echo "RELEASE_VER=" >> $GITHUB_ENV
           fi
 
       # Note: The officital version will create a pre-release here, for nightly build and image not skipped
@@ -187,6 +202,7 @@ jobs:
         run: |
           echo "version=${{ env.ARMBIAN_VERSION }}" >> $GITHUB_OUTPUT
           echo "release_tag=${{ env.RELEASE_TAG }}" >> $GITHUB_OUTPUT
+          echo "release_ver=${{ evn.RELEASE_VER }}" >> $GITHUB_OUTPUT
 
     outputs:
 
@@ -2239,7 +2255,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -2437,7 +2453,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -2635,7 +2651,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -2833,7 +2849,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -3031,7 +3047,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -3229,7 +3245,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -3427,7 +3443,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -3625,7 +3641,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -3823,7 +3839,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -4021,7 +4037,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -4219,7 +4235,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -4417,7 +4433,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -4615,7 +4631,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -4813,7 +4829,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -5011,7 +5027,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -5209,7 +5225,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.version }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
