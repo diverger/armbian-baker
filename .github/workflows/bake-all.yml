@@ -209,6 +209,7 @@ jobs:
       # not related to matrix
       version: ${{ steps.releases.outputs.version }}
       release_tag: ${{ steps.releases.outputs.release_tag }}
+      release_ver: ${{ steps.releases.outputs.release_ver }}
 
   matrix_prep:
     name: "JSON matrix: 17/16 :: 17 artifact chunks, 16 image chunks"
@@ -448,6 +449,7 @@ jobs:
 
       version: ${{ needs.build_prep.outputs.version }}
       release_tag: ${{ needs.build_prep.outputs.release_tag }}
+      release_ver: ${{ needs.build_prep.outputs.release_ver }}
 
        # artifacts-1 of 17
       artifacts-chunk-json-1: ${{ steps.prepare-matrix.outputs.artifacts-chunk-json-1 }}
