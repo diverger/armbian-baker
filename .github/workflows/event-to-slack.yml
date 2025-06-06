@@ -1,0 +1,51 @@
+name: Event to Slack
+
+on:
+  workflow_run:
+    workflows: ["*"]
+    types:
+      - completed
+
+jobs:
+  notify:
+    # Only notify for workflows that are not this notification workflow itself
+    if: github.event.workflow_run.name != 'Event to Slack'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Slack notification
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          BRANCH_NAME: ${{ github.event.workflow_run.head_branch }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          STATUS_EMOJI: ${{ github.event.workflow_run.conclusion == 'success' && '✅' || github.event.workflow_run.conclusion == 'failure' && '❌' || '⚠️' }}
+
+        uses: slackapi/slack-github-action@v2
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "${{ secrets.SLACK_CHANNEL_ID }}",
+              "text": "🔔 Workflow Notification for ${{ env.WORKFLOW_NAME }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Workflow:* ${{ env.WORKFLOW_NAME }}\n*Status:* ${{ env.STATUS_EMOJI }} ${{ env.WORKFLOW_CONCLUSION }}\n*Repository:* ${{ env.REPOSITORY }}\n*Branch:* `${{ env.BRANCH_NAME }}`\n*Commit:* `${{ env.COMMIT_SHA }}`"
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View Run"
+                    },
+                    "url": "${{ env.RUN_URL }}"
+                  }
+                }
+              ]
+            }
