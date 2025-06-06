@@ -108,7 +108,7 @@ env:
   EXTRA_PARAMS_IMAGE: "SHARE_LOG=no "
 
   RELEASE_TAG: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_tag) || '' }}
-  RELEASE_VER: # Will be set in build_prep job
+  RELEASE_VER: ""
   RELEASE_ID: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.release_id) || '' }}
 
   CUSTOM_REP: "diverger/armbian-custom"
