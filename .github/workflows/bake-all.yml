@@ -80,7 +80,7 @@ on:
         type: choice
         default: 'no'
 
-      armbian_version:
+      armbian_ver:
         description: 'Specific Armbian build framework version to use (leave empty to use latest stable version from stable.json)'
         required: false
         default: ''
@@ -89,10 +89,10 @@ on:
 env:
 
   BUILD_REPOSITORY: "diverger/armbian-build"
-  BUILD_REF: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.custom_build_ref || github.event.inputs.branch || 'armbian' }}
+  BUILD_REF: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ref || github.event.inputs.branch || 'armbian' }}
 
   USERPATCHES_REPOSITORY: "diverger/armbian-os"
-  USERPATCHES_REF: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.custom_os_ref) || 'diverger' }}
+  USERPATCHES_REF: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_os_ref) || 'diverger' }}
   USERPATCHES_DIR: "userpatches"
 
   # only used for nightly builds, and for 'community' and 'distribution' releases
@@ -100,7 +100,7 @@ env:
   DOCKER_SKIP_UPDATE: "yes"
   EXTRA_PARAMS_ALL_BUILDS: "${{ github.event.client_payload.extra_params || inputs.extra_params || 'UPLOAD_TO_OCI_ONLY=yes' }}"
 
-  ARMBIAN_VERSION: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.armbian_version) || (github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_version) || '' }}
+  ARMBIAN_VER: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.armbian_ver) || (github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ver) || '' }}
 
   GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   GHCR_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
@@ -150,18 +150,18 @@ jobs:
           mkdir -p downloads
 
           _EFFECTIVE_ARMBIAN_VERSION=""
-          if [ -z "$ARMBIAN_VERSION" ]; then
-            echo "Workflow ARMBIAN_VERSION env is empty. Reading from stable.json."
-            _EFFECTIVE_ARMBIAN_VERSION=$(jq -r '.version' stable.json)
+          if [ -z "$ARMBIAN_VER" ]; then
+            echo "Workflow ARMBIAN_VER env is empty. Reading from armbian-stable.json."
+            _EFFECTIVE_ARMBIAN_VERSION=$(jq -r '.version' armbian-stable.json)
           else
-            echo "Using ARMBIAN_VERSION from workflow env: $ARMBIAN_VERSION"
-            _EFFECTIVE_ARMBIAN_VERSION="$ARMBIAN_VERSION"
+            echo "Using ARMBIAN_VER from workflow env: $ARMBIAN_VER"
+            _EFFECTIVE_ARMBIAN_VERSION="$ARMBIAN_VER"
           fi
 
-          echo "Final ARMBIAN_VERSION determined: $_EFFECTIVE_ARMBIAN_VERSION"
+          echo "Final ARMBIAN_VER determined: $_EFFECTIVE_ARMBIAN_VERSION"
 
-          # Set it for subsequent steps in this job and for job outputs (via ${{ env.ARMBIAN_VERSION }})
-          echo "ARMBIAN_VERSION=$_EFFECTIVE_ARMBIAN_VERSION" >> $GITHUB_ENV
+          # Set it for subsequent steps in this job and for job outputs (via ${{ env.ARMBIAN_VER }})
+          echo "ARMBIAN_VER=$_EFFECTIVE_ARMBIAN_VERSION" >> $GITHUB_ENV
 
           # Create the version artifact
           echo "$_EFFECTIVE_ARMBIAN_VERSION" > downloads/version
@@ -200,14 +200,14 @@ jobs:
       - name: Save
         id: releases
         run: |
-          echo "version=${{ env.ARMBIAN_VERSION }}" >> $GITHUB_OUTPUT
+          echo "armbian_ver=${{ env.ARMBIAN_VER }}" >> $GITHUB_OUTPUT
           echo "release_tag=${{ env.RELEASE_TAG }}" >> $GITHUB_OUTPUT
           echo "release_ver=${{ env.RELEASE_VER }}" >> $GITHUB_OUTPUT
 
     outputs:
 
       # not related to matrix
-      version: ${{ steps.releases.outputs.version }}
+      armbian_ver: ${{ steps.releases.outputs.armbian_ver }}
       release_tag: ${{ steps.releases.outputs.release_tag }}
       release_ver: ${{ steps.releases.outputs.release_ver }}
 
@@ -230,10 +230,10 @@ jobs:
           path: build
 
       - name: "grab the sha1 of the commit of the custom-build repo ${{ env.BUILD_REPOSITORY }}#${{ env.BUILD_REF }}"
-        id: custom-build-commit
+        id: armbian-build-commit
         run: |
           cd build
-          echo "custom_build_sha1=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "armbian_build_sha1=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
           cd ..
 
       - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
@@ -247,10 +247,10 @@ jobs:
           path: userpatches
 
       - name: "grab the sha1 of the commit of the custom-os repo ${{ env.USERPATCHES_REPOSITORY }}#${{ env.USERPATCHES_REF }}"
-        id: custom-os-commit
+        id: armbian-os-commit
         run: |
           cd userpatches
-          echo "custom_os_sha1=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "armbian_os_sha1=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
           cd ..
 
       - name: Checkout custom repo
@@ -382,7 +382,7 @@ jobs:
           path: |
             cache/memoize
             cache/oci/positive
-          key: ${{ runner.os }}-matrix-cache-${{ github.sha }}-${{ steps.custom-build-commit.outputs.custom_build_sha1 }}-${{ steps.custom-build-commit.outputs.custom_os_sha1 }}-${{ steps.custom-build-commit.outputs.custom_sha1 }}"
+          key: ${{ runner.os }}-matrix-cache-${{ github.sha }}-${{ steps.armbian-build-commit.outputs.armbian_build_sha1 }}-${{ steps.armbian-build-commit.outputs.armbian_os_sha1 }}-${{ steps.armbian-build-commit.outputs.custom_sha1 }}"
           restore-keys: |
             ${{ runner.os }}-matrix-cache-
 
@@ -415,7 +415,7 @@ jobs:
             gha-matrix armbian-images \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            REVISION="${{ needs.build_prep.outputs.version }}" \
+            REVISION="${{ needs.build_prep.outputs.armbian_ver }}" \
             BETA=${{ env.NIGHTLY_BUILD }} \
             CLEAN_INFO=yes \
             CLEAN_MATRIX=yes \
@@ -443,11 +443,11 @@ jobs:
 
     outputs:
       # not related to matrix
-      custom_build_sha1: ${{ steps.custom-build-commit.outputs.custom_build_sha1 }}
-      custom_os_sha1: ${{ steps.custom-os-commit.outputs.custom_os_sha1 }}
+      armbian_build_sha1: ${{ steps.armbian-build-commit.outputs.armbian_build_sha1 }}
+      armbian_os_sha1: ${{ steps.armbian-os-commit.outputs.armbian_os_sha1 }}
       custom_sha1: ${{ steps.custom-commit.outputs.custom_sha1 }}
 
-      version: ${{ needs.build_prep.outputs.version }}
+      armbian_ver: ${{ needs.build_prep.outputs.armbian_ver }}
       release_tag: ${{ needs.build_prep.outputs.release_tag }}
       release_ver: ${{ needs.build_prep.outputs.release_ver }}
 
@@ -692,7 +692,7 @@ jobs:
         uses: actions/checkout@v4 # We don't need to clone git, really. A wget would suffice for GH-hosted runners. But using clone is better for Igor-hosted runners.
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false # true is default. it *will* delete the hosts /dev if mounted inside.
@@ -740,7 +740,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -782,7 +782,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -829,7 +829,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -871,7 +871,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -918,7 +918,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -960,7 +960,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1007,7 +1007,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1049,7 +1049,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1096,7 +1096,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1138,7 +1138,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1185,7 +1185,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1227,7 +1227,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1274,7 +1274,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1316,7 +1316,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1363,7 +1363,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1405,7 +1405,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1452,7 +1452,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1494,7 +1494,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1541,7 +1541,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1583,7 +1583,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1630,7 +1630,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1672,7 +1672,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1719,7 +1719,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1761,7 +1761,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1808,7 +1808,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1850,7 +1850,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1897,7 +1897,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1939,7 +1939,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -1986,7 +1986,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -2028,7 +2028,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -2075,7 +2075,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -2117,7 +2117,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -2164,7 +2164,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -2201,7 +2201,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false # true is default. it *will* delete the hosts /dev if mounted inside.
@@ -2257,7 +2257,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -2305,7 +2305,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -2336,7 +2336,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -2401,7 +2401,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -2455,7 +2455,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -2503,7 +2503,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -2534,7 +2534,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -2599,7 +2599,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -2653,7 +2653,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -2701,7 +2701,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -2732,7 +2732,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -2797,7 +2797,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -2851,7 +2851,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -2899,7 +2899,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -2930,7 +2930,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -2995,7 +2995,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -3049,7 +3049,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -3097,7 +3097,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -3128,7 +3128,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -3193,7 +3193,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -3247,7 +3247,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -3295,7 +3295,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -3326,7 +3326,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -3391,7 +3391,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -3445,7 +3445,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -3493,7 +3493,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -3524,7 +3524,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -3589,7 +3589,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -3643,7 +3643,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -3691,7 +3691,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -3722,7 +3722,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -3787,7 +3787,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -3841,7 +3841,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -3889,7 +3889,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -3920,7 +3920,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -3985,7 +3985,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -4039,7 +4039,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -4087,7 +4087,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -4118,7 +4118,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -4183,7 +4183,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -4237,7 +4237,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -4285,7 +4285,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -4316,7 +4316,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -4381,7 +4381,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -4435,7 +4435,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -4483,7 +4483,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -4514,7 +4514,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -4579,7 +4579,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -4633,7 +4633,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -4681,7 +4681,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -4712,7 +4712,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -4777,7 +4777,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -4831,7 +4831,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -4879,7 +4879,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -4910,7 +4910,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -4975,7 +4975,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -5029,7 +5029,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -5077,7 +5077,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -5108,7 +5108,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -5173,7 +5173,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: ${{ matrix.fdepth }}
           clean: false
@@ -5227,7 +5227,7 @@ jobs:
           bash ./compile.sh \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.version }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
@@ -5275,7 +5275,7 @@ jobs:
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
           assets: |
-            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
       - name: Report OSS uploading status
         if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
@@ -5306,7 +5306,7 @@ jobs:
           bucket: ${{ secrets.OBS_BUCKET }}
           operation: upload
           local_path: ./output/images/**
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
           exclude: ""
           preserve_structure: true
           checksum_validation: true
@@ -5379,7 +5379,7 @@ jobs:
         uses: actions/checkout@v4 # We don't need to clone git, really. A wget would suffice for GH-hosted runners. But using clone is better for Igor-hosted runners.
         with:
           repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
           token: ${{ env.GH_TOKEN }}
           fetch-depth: 0
           clean: false # true is default. it *will* delete the hosts /dev if mounted inside.
@@ -5425,7 +5425,7 @@ jobs:
       - name: Download the debs
         id: download-debs
         run: |
-          bash ./compile.sh debs-to-repo-download REVISION="${{ needs.matrix_prep.outputs.version }}" BETA=${{ env.NIGHTLY_BUILD || 'no' }} SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+          bash ./compile.sh debs-to-repo-download REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" BETA=${{ env.NIGHTLY_BUILD || 'no' }} SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
@@ -5449,7 +5449,7 @@ jobs:
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
-          assets: ./output/debs***:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/partial/
+          assets: ./output/debs***:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/partial/
 
       # TODO: In official version, next will inform the armbian/os repo to update the repository, what should we do?
 
@@ -5469,7 +5469,7 @@ jobs:
           region: ${{ secrets.OBS_REGION }}
           bucket: ${{ secrets.OBS_BUCKET }}
           local_path: ./output/debs***
-          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.version }}/partial/
+          obs_path: armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/partial/
 
       # TODO: In official version, next will inform the armbian/os repo to update the repository, what should we do?
 
@@ -5480,7 +5480,7 @@ jobs:
     outputs:
 
       # not related to matrix
-      version: ${{ needs.matrix_prep.outputs.version }}
+      version: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
   # ------ aggregate all artifact chunks into a single dependency -------
 
@@ -5521,9 +5521,9 @@ jobs:
         id: release_stamp
         run: |
           echo "Release version: ${{ needs.matrix_prep.outputs.release_tag }}" >> release.txt
-          echo "Armbian version: ${{ needs.matrix_prep.outputs.version }}" >> release.txt
-          echo "Custom build: ${{ needs.matrix_prep.outputs.custom_build_sha1 }}" >> release.txt
-          echo "Custom os: ${{ needs.matrix_prep.outputs.custom_os_sha1 }}" >> release.txt
+          echo "Armbian version: ${{ needs.matrix_prep.outputs.armbian_ver }}" >> release.txt
+          echo "Custom build: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}" >> release.txt
+          echo "Custom os: ${{ needs.matrix_prep.outputs.armbian_os_sha1 }}" >> release.txt
           echo "Custom: ${{ needs.matrix_prep.outputs.custom_sha1 }}" >> release.txt
           echo "Baker: ${{ github.sha }}" >> release.txt
 
