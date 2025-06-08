@@ -2307,10 +2307,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -2505,10 +2505,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -2703,10 +2703,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -2901,10 +2901,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -3099,10 +3099,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -3297,10 +3297,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -3495,10 +3495,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -3693,10 +3693,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -3891,10 +3891,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -4089,10 +4089,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -4287,10 +4287,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -4485,10 +4485,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -4683,10 +4683,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -4881,10 +4881,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -5079,10 +5079,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -5277,10 +5277,10 @@ jobs:
         timeout-minutes: 60
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
@@ -5452,10 +5452,10 @@ jobs:
         timeout-minutes: 60
         if: ${{ (github.event.inputs.skip_images || 'no') == 'no' }}
         id: upload_to_oss
-        uses: tvrcgo/oss-action@master
+        uses: diverger/gh-oss-helper@v1
         with:
-          key-id: ${{ secrets.OSS_ACCESS_KEY }}
-          key-secret: ${{ secrets.OSS_SECRET_KEY }}
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
