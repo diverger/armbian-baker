@@ -2308,12 +2308,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -2506,12 +2509,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -2704,12 +2710,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -2902,12 +2911,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -3100,12 +3112,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -3298,12 +3313,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -3496,12 +3514,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -3694,12 +3715,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -3892,12 +3916,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -4090,12 +4117,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -4288,12 +4318,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -4486,12 +4519,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -4684,12 +4720,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -4882,12 +4921,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -5080,12 +5122,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -5278,12 +5323,15 @@ jobs:
         # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: |
             ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
 
@@ -5453,12 +5501,15 @@ jobs:
         if: ${{ (github.event.inputs.skip_images || 'no') == 'no' }}
         id: upload_to_oss
         uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
         with:
           access-key: ${{ secrets.OSS_ACCESS_KEY }}
           secret-key: ${{ secrets.OSS_SECRET_KEY }}
           region: ${{ secrets.OSS_REGION }}
           bucket: ${{ secrets.OSS_BUCKET }}
           timeout: 3600
+          continue-on-error: true
           assets: ./output/debs***:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/partial/
 
       # TODO: In official version, next will inform the armbian/os repo to update the repository, what should we do?
