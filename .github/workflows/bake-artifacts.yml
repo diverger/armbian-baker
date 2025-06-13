@@ -6,50 +6,22 @@ on:
   repository_dispatch:
     types: [event-bake-artifacts]
 
-  workflow_dispatch:
-    inputs:
-      runner:
-        description: 'GitHub runner type for build jobs'
-        required: false
-        options:
-          - 'ubuntu-latest'
-          - 'github-linux64-ubuntu-latest-8core'
-          - 'github-arm64-ubuntu-24.04-8core'
-        type: choice
-        default: 'ubuntu-latest'
-
-      build_params:
-        description: 'Additional build parameters (e.g., DEBUG=yes, CLEAN_LEVEL=make-kernel)'
-        required: false
-        default: ''
-        type: string
-
-      branch:
-        type: choice
-        description: 'Armbian build framework branch to use'
-        required: false
-        options:
-        - armbian    # Main stable branch
-        - edge       # Development branch
-        - main       # Current main branch
-        default: 'armbian'
-
 env:
   BUILD_REPOSITORY: "diverger/armbian-build"
-  BUILD_REF: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.armbian_ref || github.event.inputs.branch || 'armbian' }}
+  BUILD_REF: ${{ github.event.client_payload.armbian_ref || 'armbian' }}
   USERPATCHES_REPOSITORY: "diverger/armbian-os"
   USERPATCHES_REF: ${{ github.event.client_payload.armbian_os_ref || 'diverger' }}
   USERPATCHES_DIR: "userpatches"
   BUILD_ARGS: "${{ github.event.client_payload.build_args }}"
   BUILD_PARAMS: "${{ github.event.client_payload.build_params }}"
   CUSTOM_REP: "diverger/armbian-custom"
-  CUSTOM_REF: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.custom_ref) || 'main' }}
+  CUSTOM_REF: ${{ github.event.client_payload.custom_ref || 'main' }}
   GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   GHCR_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 jobs:
   build-artifacts:
     name: "Build Artifacts"
-    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+    runs-on: ${{ github.event.client_payload.runner || 'ubuntu-latest' }}
     timeout-minutes: 480
 
     steps:
