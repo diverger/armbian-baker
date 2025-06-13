@@ -54,16 +54,16 @@ jobs:
 
     steps:
       # Free up disk space to avoid running out of space during builds
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-          docker-images: true
+    #   - name: Get more disk space
+    #     uses: jlumbroso/free-disk-space@main
+    #     with:
+    #       tool-cache: false
+    #       android: true
+    #       dotnet: true
+    #       haskell: true
+    #       large-packages: true
+    #       swap-storage: true
+    #       docker-images: true
 
       # Additional manual cleanup for more space
       - name: Additional disk cleanup
