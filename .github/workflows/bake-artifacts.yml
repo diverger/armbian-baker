@@ -45,7 +45,7 @@ env:
   CUSTOM_REP: "diverger/armbian-custom"
   CUSTOM_REF: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.custom_ref) || 'main' }}
   GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-
+  GHCR_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 jobs:
   build-artifacts:
     name: "Build Artifacts"
@@ -102,7 +102,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_ACCESS_TOKEN}}
+          token: ${{ env.GH_TOKEN }}
           repository: ${{ env.BUILD_REPOSITORY }}
           ref: ${{ env.BUILD_REF }}
           fetch-depth: 0
@@ -150,7 +150,10 @@ jobs:
           export ${{ env.BUILD_PARAMS }}
 
           # Build artifacts (customize this command based on your needs)
-          bash ./compile.sh ${{ env.BUILD_ARGS }}
+          bash ./compile.sh  \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ env.BUILD_ARGS }}
 
       # Upload artifacts
       - name: Upload artifacts
