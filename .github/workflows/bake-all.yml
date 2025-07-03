@@ -423,7 +423,7 @@ jobs:
           # Add debug environment variable to trigger our debug script
           bash ./compile.sh \
             gha-matrix armbian-images \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}" \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             REVISION="${{ needs.build_prep.outputs.armbian_ver }}" \
