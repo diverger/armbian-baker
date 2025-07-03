@@ -422,8 +422,8 @@ jobs:
 
           # Add debug environment variable to trigger our debug script
           bash ./compile.sh \
-            gha-matrix armbian-images \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            gha-matrix armbian-images \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             REVISION="${{ needs.build_prep.outputs.armbian_ver }}" \
@@ -749,6 +749,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -838,6 +839,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -927,6 +929,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1016,6 +1019,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1105,6 +1109,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1194,6 +1199,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1283,6 +1289,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1372,6 +1379,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1461,6 +1469,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1550,6 +1559,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1639,6 +1649,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1728,6 +1739,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1817,6 +1829,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1906,6 +1919,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1995,6 +2009,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -2084,6 +2099,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -2173,6 +2189,7 @@ jobs:
         id: build
         run: |
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -2266,6 +2283,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -2467,6 +2485,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -2668,6 +2687,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -2869,6 +2889,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -3070,6 +3091,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -3271,6 +3293,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -3472,6 +3495,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -3673,6 +3697,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -3874,6 +3899,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -4075,6 +4101,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -4276,6 +4303,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -4477,6 +4505,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -4678,6 +4707,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -4879,6 +4909,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -5080,6 +5111,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -5281,6 +5313,7 @@ jobs:
             USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
           fi
           bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
