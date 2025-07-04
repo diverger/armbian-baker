@@ -750,6 +750,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -840,6 +841,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -930,6 +932,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1020,6 +1023,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1110,6 +1114,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1200,6 +1205,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1290,6 +1296,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1380,6 +1387,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1470,6 +1478,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1560,6 +1569,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1650,6 +1660,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1740,6 +1751,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1830,6 +1842,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -1920,6 +1933,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -2010,6 +2024,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -2100,6 +2115,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
@@ -2190,6 +2206,7 @@ jobs:
         run: |
           bash ./compile.sh \
             OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
             GIT_TOKEN=${{ env.GH_TOKEN }} \
             GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
             ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
