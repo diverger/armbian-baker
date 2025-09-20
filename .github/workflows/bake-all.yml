@@ -675,85 +675,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A1' }} # <-- HERE: Chunk number.
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      # Login to ghcr.io, for later uploading rootfs to ghcr.io
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}" # GitHub username or org
-          password: "${{ env.GHCR_TOKEN }}"    # GitHub actions builtin token. repo has to have pkg access.
-
-      # cleanup the place where we will clone the userpatches repo, to avoid git going insane and cleaning everything later
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5 # We don't need to clone git, really. A wget would suffice for GH-hosted runners. But using clone is better for Igor-hosted runners.
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false # true is default. it *will* delete the hosts /dev if mounted inside.
-
-      # clone the userpatches repo (`armbian/os`)
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false # true is default.
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -769,82 +700,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A2' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -860,82 +725,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A3' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -951,82 +750,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A4' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1042,82 +775,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A5' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1133,82 +800,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A6' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1224,82 +825,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A7' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1315,82 +850,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A8' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1406,82 +875,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A9' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1497,82 +900,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A10' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1588,82 +925,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A11' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1679,82 +950,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A12' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1770,82 +975,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A13' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1861,82 +1000,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A14' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1952,82 +1025,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A15' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -2043,82 +1050,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A16' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -2134,82 +1075,16 @@ jobs:
     name: ${{ matrix.desc || 'Empty A17' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: "${{ github.actor }}"
-          password: "${{ env.GHCR_TOKEN }}"
-
-      - name: Cleanup userpatches repo
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: rm -rf userpatches.repo && rm -rf custom
-
-      - name: Checkout build repo
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.BUILD_REPOSITORY }}
-          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          token: ${{ env.GH_TOKEN }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-
-      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
-        uses: actions/checkout@v5
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        with:
-          token: ${{ env.GH_TOKEN }}
-          repository: ${{ env.USERPATCHES_REPOSITORY }}
-          ref: ${{ env.USERPATCHES_REF }}
-          fetch-depth: ${{ matrix.fdepth }}
-          clean: false
-          path: userpatches.repo
-
-      - name: "Checkout customizations"
-        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ env.CUSTOM_REP }}
-          token: ${{ env.GH_TOKEN }}
-          ref: ${{ env.CUSTOM_REF }}
-          fetch-depth: 0
-          clean: false
-          path: custom
-
-      - name: "Put userpatches in place, and remove userpatches repo"
-        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
-        run: |
-          mkdir -pv userpatches
-          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-          rsync -av custom/userpatches/. userpatches/
-          rm -rf userpatches.repo && rm -rf custom
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Build  ${{matrix.desc}}
-        timeout-minutes: 180
+      - name: Build ${{ matrix.desc }}
         id: build
-        run: |
-          bash ./compile.sh \
-            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
-            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
-            GIT_TOKEN=${{ env.GH_TOKEN }} \
-            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
-            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
+        uses: ./.github/actions/build-artifacts-chunck
+        timeout-minutes: 180
+        with:
+          desc: ${{ matrix.desc }}
+          invocation: ${{ matrix.invocation }}
+          fdepth: ${{ matrix.fdepth }}
+          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
