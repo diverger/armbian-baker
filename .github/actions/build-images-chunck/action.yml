@@ -1,0 +1,200 @@
+name: "Build Images Chunck"
+description: "Build a single image, sign artifacts if GPG is provided, download build-info, and upload to OSS"
+author: diverger
+
+inputs:
+  desc:
+    description: "Human readable description of the chunk"
+    required: false
+    default: ""
+  invocation:
+    description: "Matrix invocation string for compile.sh"
+    required: true
+  fdepth:
+    description: "Checkout fetch-depth"
+    required: false
+    default: "0"
+  armbian_build_sha1:
+    description: "Pinned commit for build repository"
+    required: true
+  armbian_ver:
+    description: "Armbian framework version/revision"
+    required: true
+  release_ver:
+    description: "Release version used for IMAGE_VERSION passed to compile.sh"
+    required: false
+    default: ""
+  release_tag:
+    description: "Release tag used for OSS upload path"
+    required: false
+    default: ""
+
+  # Tokens: use env.GH_TOKEN and env.GHCR_TOKEN from workflow
+
+  # Optional GPG for signing
+  gpg_private_key:
+    description: "ASCII-armored GPG private key"
+    required: false
+    default: ""
+  gpg_passphrase:
+    description: "GPG key passphrase"
+    required: false
+    default: ""
+
+  # OSS upload parameters
+  oss_access_key:
+    description: "OSS access key"
+    required: false
+    default: ""
+  oss_secret_key:
+    description: "OSS secret key"
+    required: false
+    default: ""
+  oss_region:
+    description: "OSS region"
+    required: false
+    default: ""
+  oss_bucket:
+    description: "OSS bucket"
+    required: false
+    default: ""
+
+outputs:
+  logs_url:
+    description: "Logs URL from compile.sh"
+    value: ${{ steps.build.outputs.logs_url }}
+  oss_url:
+    description: "URL returned by OSS upload step"
+    value: ${{ steps.upload_to_oss.outputs.url }}
+
+runs:
+  using: "composite"
+  steps:
+    # Free up disk space on GitHub-hosted runners (mirrors original workflow step)
+    - name: Get more disk space
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: false
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        swap-storage: true
+
+    # cleanup the place where we will clone the userpatches repo, to avoid git going insane and cleaning everything later
+    - name: Cleanup userpatches repo
+      if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+      shell: bash
+      run: rm -rf userpatches.repo && rm -rf custom
+
+    - name: Checkout build repo
+      # We don't need to clone git, really. A wget would suffice for GH-hosted runners.
+      # But using clone is better for Igor-hosted runners.
+      uses: actions/checkout@v5
+      with:
+        repository: ${{ env.BUILD_REPOSITORY }}
+        ref: ${{ inputs.armbian_build_sha1 }}
+        token: ${{ env.GH_TOKEN }}
+        fetch-depth: ${{ inputs.fdepth }}
+        clean: false # true is default. it *will* delete the hosts /dev if mounted inside.
+        path: build
+
+    # clone the userpatches repo (`armbian/os`)
+    - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+      if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+      uses: actions/checkout@v5
+      with:
+        token: ${{ env.GH_TOKEN }}
+        repository: ${{ env.USERPATCHES_REPOSITORY }}
+        ref: ${{ env.USERPATCHES_REF }}
+        fetch-depth: ${{ inputs.fdepth }}
+        clean: false # true is default.
+        path: userpatches.repo
+
+    - name: "Checkout customizations"
+      if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+      uses: actions/checkout@v5
+      with:
+        repository: ${{ env.CUSTOM_REP }}
+        token: ${{ env.GH_TOKEN }}
+        ref: ${{ env.CUSTOM_REF }}
+        fetch-depth: 0
+        clean: false
+        path: custom
+
+    - name: "Put userpatches in place, and remove userpatches repo"
+      if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+      shell: bash
+      run: |
+        mkdir -pv build/userpatches
+        rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. build/userpatches/
+        rsync -av custom/userpatches/. build/userpatches/
+        rm -rf userpatches.repo && rm -rf custom
+
+    - name: "Cleanup leftover output"
+      shell: bash
+      run: |
+        rm -f build/userpatches/VERSION
+
+    # Enable binfmt for building foreign architectures
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: all
+
+    # Build the image using Armbian's compile.sh
+    - name: Build  ${{ inputs.desc }}
+      id: build
+      shell: bash
+      run: |
+        # calculate loop from runner name if ImageOS is empty (ubuntu-latest)
+        if [ -z "${ImageOS}" ]; then
+          USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+        fi
+        cd build
+        bash ./compile.sh \
+          OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+          GIT_TOKEN=${{ env.GH_TOKEN }} \
+          GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+          ${{ inputs.invocation }} REVISION="${{ inputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ inputs.release_ver }} ${{ env.EXTRA_PARAMS_IMAGE }} ${{ env.EXTRA_PARAMS_ALL_BUILDS }}
+
+    # Import GPG and sign, only if provided
+    - name: Import GPG key
+      if: ${{ inputs.gpg_private_key != '' }}
+      uses: crazy-max/ghaction-import-gpg@v6
+      with:
+        gpg_private_key: ${{ inputs.gpg_private_key }}
+        passphrase: ${{ inputs.gpg_passphrase }}
+
+    - name: Sign artifacts
+      if: ${{ inputs.gpg_passphrase != '' }}
+      shell: bash
+      run: |
+        for extension in zip xz qcow2; do
+          if ls -l build/output/images/*/archive/*.$extension &>/dev/null; then
+            echo "${{ inputs.gpg_passphrase }}" | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes build/output/images/*/archive/*.$extension
+          fi
+        done
+
+    - name: Download build-info artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build-info-json
+        path: build/output/info
+
+    - name: Upload to OSS
+      id: upload_to_oss
+      if: ${{ inputs.oss_access_key != '' && inputs.oss_secret_key != '' && inputs.oss_bucket != '' }}
+      uses: diverger/gh-oss-helper@v1
+      env:
+        ACTIONS_STEP_DEBUG: true
+      with:
+        access-key: ${{ inputs.oss_access_key }}
+        secret-key: ${{ inputs.oss_secret_key }}
+        region: ${{ inputs.oss_region }}
+        bucket: ${{ inputs.oss_bucket }}
+        timeout: 3600
+        continue-on-error: true
+        assets: |
+          ./build/output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ inputs.release_tag }}/${{ inputs.armbian_ver }}/
+
