@@ -675,25 +675,85 @@ jobs:
     name: ${{ matrix.desc || 'Empty A1' }} # <-- HERE: Chunk number.
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      # Login to ghcr.io, for later uploading rootfs to ghcr.io
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}" # GitHub username or org
+          password: "${{ env.GHCR_TOKEN }}"    # GitHub actions builtin token. repo has to have pkg access.
+
+      # cleanup the place where we will clone the userpatches repo, to avoid git going insane and cleaning everything later
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
+        uses: actions/checkout@v5 # We don't need to clone git, really. A wget would suffice for GH-hosted runners. But using clone is better for Igor-hosted runners.
+        with:
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false # true is default. it *will* delete the hosts /dev if mounted inside.
+
+      # clone the userpatches repo (`armbian/os`)
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        with:
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false # true is default.
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
           clean: false
+          path: custom
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -709,25 +769,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A2' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -743,25 +860,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A3' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -777,25 +951,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A4' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -811,25 +1042,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A5' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -845,25 +1133,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A6' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -879,25 +1224,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A7' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -913,25 +1315,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A8' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -947,25 +1406,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A9' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -981,25 +1497,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A10' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1015,25 +1588,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A11' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1049,25 +1679,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A12' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1083,25 +1770,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A13' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1117,25 +1861,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A14' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1151,25 +1952,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A15' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1185,25 +2043,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A16' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1219,25 +2134,82 @@ jobs:
     name: ${{ matrix.desc || 'Empty A17' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.actor }}"
+          password: "${{ env.GHCR_TOKEN }}"
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build ${{ matrix.desc }}
-        id: build
-        uses: ./gh-actions/.github/actions/build-artifacts-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build  ${{matrix.desc}}
+        timeout-minutes: 180
+        id: build
+        run: |
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" SHOW_DEBUG=yes SHARE_LOG=no ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build.outputs.logs_url }}"
         if: always()
@@ -1254,51 +2226,148 @@ jobs:
     name: ${{ matrix.desc || 'Empty I1' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      # cleanup the place where we will clone the userpatches repo, to avoid git going insane and cleaning everything later
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
-          clean: false
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false # true is default. it *will* delete the hosts /dev if mounted inside.
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      # clone the userpatches repo (`armbian/os`)
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false # true is default.
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          # calculate loop from runner name
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I1.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I1.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I1"
@@ -1314,51 +2383,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I2' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I2.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I2.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I2"
@@ -1374,51 +2537,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I3' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I3.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I3.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I3"
@@ -1434,51 +2691,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I4' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I4.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I4.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I4"
@@ -1494,51 +2845,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I5' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I5.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I5.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I5"
@@ -1554,51 +2999,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I6' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I6.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I6.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I6"
@@ -1614,51 +3153,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I7' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I7.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I7.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I7"
@@ -1674,51 +3307,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I8' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I8.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I8.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I8"
@@ -1734,51 +3461,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I9' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I9.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I9.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I9"
@@ -1794,51 +3615,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I10' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I10.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I10.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I10"
@@ -1854,51 +3769,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I11' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I11.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I11.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I11"
@@ -1914,51 +3923,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I12' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I12.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I12.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I12"
@@ -1974,51 +4077,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I13' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I13.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I13.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I13"
@@ -2034,51 +4231,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I14' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I14.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I14.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I14"
@@ -2094,51 +4385,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I15' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I15.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I15.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I15"
@@ -2154,51 +4539,145 @@ jobs:
     name: ${{ matrix.desc || 'Empty I16' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: Checkout workflow repo (for local actions)
+
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cleanup userpatches repo
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: rm -rf userpatches.repo && rm -rf custom
+
+      - name: Checkout build repo
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: gh-actions
-          fetch-depth: 1
+          repository: ${{ env.BUILD_REPOSITORY }}
+          ref: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
+          token: ${{ env.GH_TOKEN }}
+          fetch-depth: ${{ matrix.fdepth }}
           clean: false
 
-      - name: Build and sign ${{ matrix.desc }}
-        id: build-one-image
-        uses: ./gh-actions/.github/actions/build-images-chunck
-        timeout-minutes: 180
+      - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
+        uses: actions/checkout@v5
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
         with:
-          desc: ${{ matrix.desc }}
-          invocation: ${{ matrix.invocation }}
-          fdepth: ${{ matrix.fdepth }}
-          armbian_build_sha1: ${{ needs.matrix_prep.outputs.armbian_build_sha1 }}
-          armbian_ver: ${{ needs.matrix_prep.outputs.armbian_ver }}
-          release_ver: ${{ needs.matrix_prep.outputs.release_ver }}
-          release_tag: ${{ needs.matrix_prep.outputs.release_tag }}
-          gpg_private_key: ${{ secrets.GPG_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-          oss_access_key: ${{ secrets.OSS_ACCESS_KEY }}
-          oss_secret_key: ${{ secrets.OSS_SECRET_KEY }}
-          oss_region: ${{ secrets.OSS_REGION }}
-          oss_bucket: ${{ secrets.OSS_BUCKET }}
+          token: ${{ env.GH_TOKEN }}
+          repository: ${{ env.USERPATCHES_REPOSITORY }}
+          ref: ${{ env.USERPATCHES_REF }}
+          fetch-depth: ${{ matrix.fdepth }}
+          clean: false
+          path: userpatches.repo
+
+      - name: "Checkout customizations"
+        if: ${{ ( env.CUSTOM_REP != '' ) && ( env.CUSTOM_REF != '' ) }}
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.CUSTOM_REP }}
+          token: ${{ env.GH_TOKEN }}
+          ref: ${{ env.CUSTOM_REF }}
+          fetch-depth: 0
+          clean: false
+          path: custom
+
+      - name: "Put userpatches in place, and remove userpatches repo"
+        if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
+        run: |
+          mkdir -pv userpatches
+          rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
+          rsync -av custom/userpatches/. userpatches/
+          rm -rf userpatches.repo && rm -rf custom
+
+      - name: "Cleanup leftover output"
+        run: |
+          rm -f userpatches/VERSION
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: ${{matrix.desc}}
+        id: build-one-image
+        timeout-minutes: 120
+        run: |
+          if [ -z "${ImageOS}" ]; then
+            USE_FIXED_LOOP_DEVICE=$(echo ${RUNNER_NAME} | rev | cut -d"-" -f1  | rev | sed 's/^0*//' | sed -e 's/^/\/dev\/loop/')
+          fi
+          bash ./compile.sh \
+            OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
+            GIT_TOKEN=${{ env.GH_TOKEN }} \
+            GHCR_TOKEN=${{ env.GHCR_TOKEN }} \
+            ${{ matrix.invocation }} REVISION="${{ needs.matrix_prep.outputs.armbian_ver }}" USE_FIXED_LOOP_DEVICE="$USE_FIXED_LOOP_DEVICE" SHARE_LOG=no MAKE_FOLDERS="archive" IMAGE_VERSION=${{ needs.matrix_prep.outputs.release_ver }} ${{env.EXTRA_PARAMS_IMAGE}} ${{env.EXTRA_PARAMS_ALL_BUILDS}}
 
       - name: "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
         if: always()
         run: |
           echo "Logs: ${{ steps.build-one-image.outputs.logs_url }}"
 
+      - name: Import GPG key
+        env:
+          GPG_KEY1: ${{ secrets.GPG_KEY }}
+        if: env.GPG_KEY1 != null
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+
+      - name: Sign
+        env:
+          GPG_KEY_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        if: env.GPG_KEY_PASSPHRASE != null
+        run: |
+
+          for extension in zip xz qcow2; do
+            if ls -l output/images/*/archive/*.$extension &>/dev/null; then
+              echo ${{ secrets.GPG_KEY_PASSPHRASE }} | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes output/images/*/archive/*.$extension
+            fi
+          done
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-json
+          path: output/info
+
+      # Note: The officail version will upload the nightly building artifacts to GitHub space, but stable building artfacts to server
+      # Upload to OSS
+      - name: Upload to OSS
+        timeout-minutes: 60
+        # if: ${{ env.NIGHTLY_BUILD == 'no' && env.RELEASE_REPOSITORY == 'armbian-baker' }}
+        id: upload_to_oss
+        uses: diverger/gh-oss-helper@v1
+        env:
+          ACTIONS_STEP_DEBUG: true
+        with:
+          access-key: ${{ secrets.OSS_ACCESS_KEY }}
+          secret-key: ${{ secrets.OSS_SECRET_KEY }}
+          region: ${{ secrets.OSS_REGION }}
+          bucket: ${{ secrets.OSS_BUCKET }}
+          timeout: 3600
+          continue-on-error: true
+          assets: |
+            ./output/images/**:/armbian/${{ env.NIGHTLY_BUILD == 'yes' && 'nightly' || 'stable' }}/${{ needs.matrix_prep.outputs.release_tag }}/${{ needs.matrix_prep.outputs.armbian_ver }}/
+
       - name: Report OSS uploading status
-        if: ${{ steps.build-one-image.outputs.oss_url }}
+        if: ${{ steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url }}
         shell: bash
         run: |
-          OSS_URL="${{ steps.build-one-image.outputs.oss_url }}"
+          OSS_URL="${{ steps.upload_to_oss.outputs.url }}"
           echo "Successfully uploaded to OSS. URL: ${OSS_URL}"
           mkdir -p oss-urls
           echo "${OSS_URL}" >> "oss-urls/image-urls-I16.txt"
           echo "OSS URL has been appended to oss-urls/image-urls-I16.txt"
 
       - name: Upload OSS URL
-        if: ${{ always() && steps.build-one-image.outputs.oss_url }}
+        if: ${{ always() && ( steps.upload_to_oss.conclusion == 'success' && steps.upload_to_oss.outputs.url )}}
         uses: actions/upload-artifact@v4
         with:
           name: "oss-urls-I16"
@@ -2322,11 +4801,11 @@ jobs:
           echo "Logs debs-to-repo-download: ${{ steps.download-debs.outputs.logs_url }}"
 
     outputs:
+
       # not related to matrix
       version: ${{ needs.matrix_prep.outputs.armbian_ver }}
 
   # ------ aggregate all artifact chunks into a single dependency -------
-
   closing:
     name: "Footer"
     runs-on: ${{ github.event.inputs.runner || github.event.client_payload.runner || 'ubuntu-latest' }}
