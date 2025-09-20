@@ -675,9 +675,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A1' }} # <-- HERE: Chunk number.
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -700,9 +709,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A2' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -725,9 +743,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A3' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -750,9 +777,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A4' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -775,9 +811,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A5' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -800,9 +845,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A6' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -825,9 +879,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A7' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -850,9 +913,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A8' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -875,9 +947,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A9' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -900,9 +981,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A10' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -925,9 +1015,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A11' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -950,9 +1049,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A12' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -975,9 +1083,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A13' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -1000,9 +1117,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A14' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -1025,9 +1151,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A15' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -1050,9 +1185,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A16' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
@@ -1075,9 +1219,18 @@ jobs:
     name: ${{ matrix.desc || 'Empty A17' }}
     runs-on: ${{ matrix.runs_on }}
     steps:
+      - name: Checkout workflow repo (for local actions)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: gh-actions
+          fetch-depth: 1
+          clean: false
+
       - name: Build ${{ matrix.desc }}
         id: build
-        uses: ./.github/actions/build-artifacts-chunck
+        uses: ./gh-actions/.github/actions/build-artifacts-chunck
         timeout-minutes: 180
         with:
           desc: ${{ matrix.desc }}
