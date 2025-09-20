@@ -1360,7 +1360,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -1562,7 +1562,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -1764,7 +1764,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -1966,7 +1966,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -2168,7 +2168,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -2370,7 +2370,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -2572,7 +2572,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -2774,7 +2774,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -2976,7 +2976,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -3178,7 +3178,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -3380,7 +3380,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -3582,7 +3582,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -3784,7 +3784,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -3986,7 +3986,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -4188,7 +4188,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -4390,7 +4390,7 @@ jobs:
           done
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -4549,7 +4549,7 @@ jobs:
 
       # Download the artifacts (output/info) produced by the prepare-matrix job.
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-info-json
           path: output/info
@@ -4668,7 +4668,7 @@ jobs:
           echo "Baker: ${{ github.sha }}" >> release.txt
 
       - name: Download all OSS URL artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: oss-urls-*
           merge-multiple: true
@@ -4681,7 +4681,7 @@ jobs:
           echo "Combined OSS URLs into oss-urls/oss-urls.txt"
 
       - name: Download all OBS URL artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: obs-urls-*
           merge-multiple: true
