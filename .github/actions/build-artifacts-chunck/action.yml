@@ -64,6 +64,7 @@ runs:
         token: ${{ env.GH_TOKEN }}
         fetch-depth: ${{ inputs.fdepth }}
         clean: false # true is default. it *will* delete the hosts /dev if mounted inside.
+        path: build
 
     # clone the userpatches repo (`armbian/os`)
     - name: "Checkout userpatches repo: ${{env.USERPATCHES_REPOSITORY}}#${{env.USERPATCHES_REF}}"
@@ -92,9 +93,9 @@ runs:
       if: ${{ ( env.USERPATCHES_REPOSITORY != '' ) && ( env.USERPATCHES_REF != '' ) }}
       shell: bash
       run: |
-        mkdir -pv userpatches
-        rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. userpatches/
-        rsync -av custom/userpatches/. userpatches/
+        mkdir -pv build/userpatches
+        rsync -av userpatches.repo/${{env.USERPATCHES_DIR}}/. build/userpatches/
+        rsync -av custom/userpatches/. build/userpatches/
         rm -rf userpatches.repo && rm -rf custom
 
     # Enable binfmt for building foreign architectures
@@ -108,6 +109,7 @@ runs:
       id: build
       shell: bash
       run: |
+        cd build
         bash ./compile.sh \
           OCI_TARGET_BASE="ghcr.io/${{ github.repository }}/" \
           IMAGE_SOURCE="${{ github.server_url }}/${{ github.repository }}" \
