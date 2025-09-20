@@ -38,7 +38,7 @@ runs:
         dotnet: true
         haskell: true
         large-packages: true
-        swap-storage: true
+        swap-storage: false
 
     # Login to ghcr.io, for later uploading rootfs to ghcr.io
     - name: Docker Login to GitHub Container Registry

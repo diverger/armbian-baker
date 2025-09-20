@@ -79,7 +79,7 @@ runs:
         dotnet: true
         haskell: true
         large-packages: true
-        swap-storage: true
+        swap-storage: false
 
     # cleanup the place where we will clone the userpatches repo, to avoid git going insane and cleaning everything later
     - name: Cleanup userpatches repo
